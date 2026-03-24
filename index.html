@@ -70,8 +70,24 @@ let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
 
 function addLink(){
   let link = document.getElementById("link").value;
+
+  if(currentUser.points < 10){
+    alert("❌ ليس لديك نقاط كافية");
+    return;
+  }
+
+  currentUser.points -= 10;
+
+  let users = JSON.parse(localStorage.getItem("users"));
+  let index = users.findIndex(u => u.user === currentUser.user);
+  users[index] = currentUser;
+  localStorage.setItem("users", JSON.stringify(users));
+
+  document.getElementById("points").innerText = currentUser.points;
+
   accounts.push(link);
   localStorage.setItem("accounts", JSON.stringify(accounts));
+
   show();
 }
 
