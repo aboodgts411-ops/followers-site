@@ -101,6 +101,12 @@ function show(){
 
 function follow(){
   currentUser.points += 10;
+
+  let users = JSON.parse(localStorage.getItem("users"));
+  let index = users.findIndex(u => u.user === currentUser.user);
+  users[index] = currentUser;
+  localStorage.setItem("users", JSON.stringify(users));
+
   document.getElementById("points").innerText = currentUser.points;
 }
 show();
