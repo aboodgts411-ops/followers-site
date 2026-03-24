@@ -8,11 +8,11 @@
 
   <h1>🚀 موقع زيادة المتابعين</h1>
 
-  <input id="link" type="text" placeholder="ضع رابط حسابك" style="padding:10px; width:250px;">
+  <input id="link" type="text" placeholder="ضع رابط حسابك">
   <br><br>
-  <button onclick="addLink()" style="padding:10px 20px;">إرسال</button>
+  <button onclick="addLink()">إرسال</button>
 
-  <h2>👥 حسابات للمتابعة</h2>
+  <h2>الحسابات:</h2>
   <div id="list"></div>
 
 <script>
@@ -30,12 +30,8 @@ function show() {
   let list = document.getElementById("list");
   list.innerHTML = "";
   accounts.forEach(acc => {
-    list.innerHTML += `<p>${acc} <button onclick="follow()">تابع</button></p>`;
+    list.innerHTML += "<p>" + acc + "</p>";
   });
-}
-
-function follow(){
-  alert("تم! ستحصل على نقاط");
 }
 </script>
 
