@@ -1,49 +1,93 @@
-
 <!DOCTYPE html>
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>زيادة المتابعين</title>
+  <title>منصة المتابعين</title>
 </head>
-<body style="background:#0f172a; color:white; font-family:Arial; text-align:center; padding:50px;">
 
-  <h1>🚀 زيادة المتابعين</h1>
+<body style="background:#0f172a; color:white; text-align:center; font-family:Arial; padding:50px;">
 
-  <input id="link" type="text" placeholder="ضع رابط حسابك"
-  style="padding:10px; width:250px; border-radius:8px; border:none;">
-  
-  <br><br>
+<h1>🚀 منصة زيادة المتابعين</h1>
 
-  <button onclick="addLink()"
-  style="padding:10px 20px; border:none; border-radius:8px; background:#38bdf8;">
-  إرسال
-  </button>
+<div id="auth">
 
-  <h2>👥 الحسابات</h2>
-  <div id="list"></div>
+<h2>تسجيل</h2>
+<input id="username" placeholder="اسم المستخدم"><br><br>
+<input id="password" type="password" placeholder="كلمة المرور"><br><br>
+
+<button onclick="register()">تسجيل</button>
+<button onclick="login()">دخول</button>
+
+</div>
+
+<div id="app" style="display:none;">
+
+<h2>أضف حسابك</h2>
+<input id="link" placeholder="رابط حسابك"><br><br>
+<button onclick="addLink()">إرسال</button>
+
+<h3>النقاط: <span id="points">0</span></h3>
+
+<h2>الحسابات</h2>
+<div id="list"></div>
+
+</div>
 
 <script>
-let accounts = [];
+let currentUser = null;
 
-function addLink() {
-  let link = document.getElementById("link").value;
-  if(link){
-    accounts.push(link);
-    show();
+function register(){
+  let user = document.getElementById("username").value;
+  let pass = document.getElementById("password").value;
+
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+
+  users.push({user, pass, points:0});
+  localStorage.setItem("users", JSON.stringify(users));
+
+  alert("تم التسجيل");
+}
+
+function login(){
+  let user = document.getElementById("username").value;
+  let pass = document.getElementById("password").value;
+
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+
+  let found = users.find(u => u.user === user && u.pass === pass);
+
+  if(found){
+    currentUser = found;
+    document.getElementById("auth").style.display="none";
+    document.getElementById("app").style.display="block";
+    document.getElementById("points").innerText = found.points;
+  } else {
+    alert("خطأ");
   }
 }
 
-function show() {
+let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
+
+function addLink(){
+  let link = document.getElementById("link").value;
+  accounts.push(link);
+  localStorage.setItem("accounts", JSON.stringify(accounts));
+  show();
+}
+
+function show(){
   let list = document.getElementById("list");
-  list.innerHTML = "";
-  accounts.forEach(acc => {
+  list.innerHTML="";
+  accounts.forEach(acc=>{
     list.innerHTML += `<p>${acc} <button onclick="follow()">تابع</button></p>`;
   });
 }
 
 function follow(){
-  alert("تم! ستحصل على نقاط");
+  currentUser.points += 10;
+  document.getElementById("points").innerText = currentUser.points;
 }
+show();
 </script>
 
 </body>
