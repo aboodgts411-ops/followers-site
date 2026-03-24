@@ -7,11 +7,37 @@
 <body style="text-align:center; font-family:Arial; padding:50px; background:#111; color:white;">
 
   <h1>🚀 موقع زيادة المتابعين</h1>
-  <p>ضع رابط حسابك وابدأ الآن</p>
 
-  <input type="text" placeholder="رابط حسابك" style="padding:10px; width:250px;">
+  <input id="link" type="text" placeholder="ضع رابط حسابك" style="padding:10px; width:250px;">
   <br><br>
-  <button onclick="alert('تم!')" style="padding:10px 20px;">إرسال</button>
+  <button onclick="addLink()" style="padding:10px 20px;">إرسال</button>
+
+  <h2>👥 حسابات للمتابعة</h2>
+  <div id="list"></div>
+
+<script>
+let accounts = [];
+
+function addLink() {
+  let link = document.getElementById("link").value;
+  if(link){
+    accounts.push(link);
+    show();
+  }
+}
+
+function show() {
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+  accounts.forEach(acc => {
+    list.innerHTML += `<p>${acc} <button onclick="follow()">تابع</button></p>`;
+  });
+}
+
+function follow(){
+  alert("تم! ستحصل على نقاط");
+}
+</script>
 
 </body>
 </html>
