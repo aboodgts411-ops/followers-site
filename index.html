@@ -1,18 +1,25 @@
+
 <!DOCTYPE html>
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
   <title>زيادة المتابعين</title>
 </head>
-<body style="text-align:center; font-family:Arial; padding:50px; background:#111; color:white;">
+<body style="background:#0f172a; color:white; font-family:Arial; text-align:center; padding:50px;">
 
-  <h1>🚀 موقع زيادة المتابعين</h1>
+  <h1>🚀 زيادة المتابعين</h1>
 
-  <input id="link" type="text" placeholder="ضع رابط حسابك">
+  <input id="link" type="text" placeholder="ضع رابط حسابك"
+  style="padding:10px; width:250px; border-radius:8px; border:none;">
+  
   <br><br>
-  <button onclick="addLink()">إرسال</button>
 
-  <h2>الحسابات:</h2>
+  <button onclick="addLink()"
+  style="padding:10px 20px; border:none; border-radius:8px; background:#38bdf8;">
+  إرسال
+  </button>
+
+  <h2>👥 الحسابات</h2>
   <div id="list"></div>
 
 <script>
@@ -30,8 +37,12 @@ function show() {
   let list = document.getElementById("list");
   list.innerHTML = "";
   accounts.forEach(acc => {
-    list.innerHTML += "<p>" + acc + "</p>";
+    list.innerHTML += `<p>${acc} <button onclick="follow()">تابع</button></p>`;
   });
+}
+
+function follow(){
+  alert("تم! ستحصل على نقاط");
 }
 </script>
 
