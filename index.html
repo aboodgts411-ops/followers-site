@@ -23,7 +23,6 @@ body{
   background:#1e293b;
   padding:20px;
   border-radius:20px;
-  box-shadow:0 0 20px rgba(0,0,0,0.5);
 }
 
 input{
@@ -40,20 +39,12 @@ button{
   border:none;
   border-radius:10px;
   margin-top:10px;
-  cursor:pointer;
 }
 
 .send{background:#38bdf8;}
-.follow{background:#22c55e; margin-top:5px;}
+.follow{background:#22c55e;}
 .buy{background:gold; color:black;}
 .logout{background:red;}
-
-.account{
-  background:#0f172a;
-  padding:10px;
-  border-radius:10px;
-  margin:10px 0;
-}
 </style>
 </head>
 
@@ -64,15 +55,28 @@ button{
 
 <h1>🚀 Followers Boost Pro</h1>
 
-<h3>النقاط: <span id="points">100</span></h3>
+<div id="auth">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="register()">تسجيل</button>
+<button onclick="login()">دخول</button>
+</div>
+
+<div id="app" style="display:none;">
+
+<h3>النقاط: <span id="points">0</span></h3>
 
 <button class="buy" onclick="buyPoints()">💰 شراء نقاط</button>
 
 <input id="link" placeholder="رابط حسابك">
 <button class="send" onclick="addLink()">إرسال</button>
 
-<h3>👥 الحسابات</h3>
 <div id="list"></div>
+
+<button class="logout" onclick="logout()">تسجيل الخروج</button>
+
+</div>
 
 </div>
 </div>
@@ -80,9 +84,9 @@ button{
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-// 🔥 إعداد Firebase (كودك)
 const firebaseConfig = {
   apiKey: "AIzaSyC0BzESCHSyXZhOxF8FXxEjxs_WYIPOEhA",
   authDomain: "followers-app-f3419.firebaseapp.com",
@@ -93,63 +97,116 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 🧠 نظام النقاط
-let points = localStorage.getItem("points") || 100;
-document.getElementById("points").innerText = points;
+let currentUser = null;
 
-function buyPoints(){
-  points = parseInt(points) + 100;
-  localStorage.setItem("points", points);
-  document.getElementById("points").innerText = points;
+// تسجيل
+function register(){
+  let email = document.getElementById("email").value;
+  let pass = document.getElementById("password").value;
+
+  auth.createUserWithEmailAndPassword(email, pass)
+  .then(user=>{
+    currentUser = user.user;
+    db.collection("users").doc(currentUser.uid).set({
+      points:100
+    });
+  });
 }
 
-// ➕ إضافة رابط
+// دخول
+function login(){
+  let email = document.getElementById("email").value;
+  let pass = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(email, pass);
+}
+
+// مراقبة الدخول
+auth.onAuthStateChanged(user=>{
+  if(user){
+    currentUser = user;
+    document.getElementById("auth").style.display="none";
+    document.getElementById("app").style.display="block";
+
+    db.collection("users").doc(user.uid).get().then(doc=>{
+      document.getElementById("points").innerText = doc.data().points;
+    });
+
+    loadAccounts();
+  }
+});
+
+// شراء نقاط
+function buyPoints(){
+  let ref = db.collection("users").doc(currentUser.uid);
+
+  ref.get().then(doc=>{
+    let p = doc.data().points + 100;
+    ref.update({points:p});
+    document.getElementById("points").innerText = p;
+  });
+}
+
+// إضافة رابط
 function addLink(){
   let link = document.getElementById("link").value;
 
-  if(points < 10){
-    alert("❌ لا توجد نقاط");
-    return;
-  }
+  let ref = db.collection("users").doc(currentUser.uid);
 
-  db.collection("accounts").add({
-    url: link
+  ref.get().then(doc=>{
+    let p = doc.data().points;
+
+    if(p < 10){
+      alert("❌ لا توجد نقاط");
+      return;
+    }
+
+    db.collection("accounts").add({url:link});
+
+    ref.update({points:p-10});
+    document.getElementById("points").innerText = p-10;
   });
-
-  points -= 10;
-  localStorage.setItem("points", points);
-  document.getElementById("points").innerText = points;
 }
 
-// 🔴 عرض مباشر (Real-time)
-db.collection("accounts").onSnapshot((data)=>{
-  let list = document.getElementById("list");
-  list.innerHTML = "";
+// عرض الحسابات
+function loadAccounts(){
+  db.collection("accounts").onSnapshot(data=>{
+    let list = document.getElementById("list");
+    list.innerHTML="";
 
-  data.forEach(doc=>{
-    let acc = doc.data().url;
+    data.forEach(doc=>{
+      let acc = doc.data().url;
 
-    list.innerHTML += `
-    <div class="account">
-      ${acc}
-      <button class="follow" onclick="follow('${acc}')">
-      🔗 تابع
-      </button>
-    </div>`;
+      list.innerHTML += `
+      <p>
+        ${acc}
+        <button onclick="follow('${acc}')">تابع</button>
+      </p>`;
+    });
   });
-});
+}
 
-// 🟢 متابعة + نقاط
+// متابعة
 function follow(link){
-  window.open(link, "_blank");
+  window.open(link,"_blank");
 
-  setTimeout(()=>{
-    points = parseInt(points) + 10;
-    localStorage.setItem("points", points);
-    document.getElementById("points").innerText = points;
-  }, 3000);
+  let ref = db.collection("users").doc(currentUser.uid);
+
+  ref.get().then(doc=>{
+    let p = doc.data().points + 10;
+    ref.update({points:p});
+    document.getElementById("points").innerText = p;
+  });
+}
+
+// خروج
+function logout(){
+  auth.signOut();
+  location.reload();
 }
 </script>
 
