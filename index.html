@@ -7,110 +7,104 @@
 <style>
 body{
   margin:0;
-  font-family:'Segoe UI',sans-serif;
-  background:linear-gradient(135deg,#0f172a,#020617);
+  font-family:Arial;
+  background:#0f172a;
   color:white;
+  text-align:center;
+}
+
+nav{
+  background:#020617;
+  padding:10px;
+}
+
+nav button{
+  margin:5px;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
 }
 
 .container{
-  max-width:420px;
+  max-width:400px;
   margin:auto;
   padding:20px;
 }
 
-.card{
-  background:rgba(30,41,59,0.9);
-  backdrop-filter:blur(10px);
-  padding:20px;
-  border-radius:20px;
-  box-shadow:0 10px 40px rgba(0,0,0,0.7);
-}
+.hidden{display:none;}
 
-h1{
-  text-align:center;
-}
-
-input{
+input, button{
   width:100%;
-  padding:12px;
-  margin:8px 0;
-  border-radius:12px;
-  border:none;
-  outline:none;
-  font-size:14px;
-}
-
-button{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:12px;
-  margin-top:10px;
-  font-weight:bold;
-  cursor:pointer;
-  transition:0.3s;
-}
-
-button:hover{
-  transform:scale(1.05);
-}
-
-.send{background:#38bdf8;}
-.follow{background:#22c55e;}
-.buy{background:linear-gradient(90deg,gold,orange); color:black;}
-.logout{background:red;}
-
-.account{
-  background:#020617;
-  padding:12px;
-  border-radius:12px;
-  margin:10px 0;
-}
-
-.leader{
-  background:#111827;
   padding:10px;
+  margin:5px 0;
   border-radius:10px;
-  margin:5px;
+  border:none;
+}
+
+.card{
+  background:#1e293b;
+  padding:20px;
+  border-radius:15px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-<div class="card">
+<nav>
+<button onclick="showPage('home')">🏠 الرئيسية</button>
+<button onclick="showPage('about')">ℹ️ من نحن</button>
+<button onclick="showPage('privacy')">🔒 سياسة الخصوصية</button>
+</nav>
 
-<h1>🚀 Followers Boost Pro</h1>
+<div class="container">
+
+<!-- الصفحة الرئيسية -->
+<div id="home" class="card">
+
+<h1>🚀 Followers Boost</h1>
 
 <div id="auth">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
-
 <button onclick="register()">تسجيل</button>
 <button onclick="login()">دخول</button>
 </div>
 
-<div id="app" style="display:none;">
+<div id="app" class="hidden">
 
-<h3>⭐ النقاط: <span id="points">0</span></h3>
-
-<button class="buy" onclick="buyPoints()">💰 شراء نقاط</button>
+<h3>النقاط: <span id="points">0</span></h3>
 
 <input id="link" placeholder="رابط حسابك">
-<button class="send" onclick="addLink()">إرسال</button>
+<button onclick="addLink()">إرسال</button>
 
-<h3>👥 الحسابات</h3>
 <div id="list"></div>
 
-<h3>🏆 المتصدرين</h3>
-<div id="leaderboard"></div>
-
-<button class="logout" onclick="logout()">تسجيل الخروج</button>
+<button onclick="logout()">تسجيل الخروج</button>
 
 </div>
 
 </div>
+
+<!-- من نحن -->
+<div id="about" class="card hidden">
+<h2>من نحن</h2>
+<p>
+هذا الموقع يهدف إلى مساعدة المستخدمين على زيادة متابعيهم
+من خلال تبادل التفاعل بين المستخدمين بطريقة بسيطة وسريعة.
+</p>
+</div>
+
+<!-- سياسة الخصوصية -->
+<div id="privacy" class="card hidden">
+<h2>سياسة الخصوصية</h2>
+<p>
+نحن نحترم خصوصيتك ولا نقوم بمشاركة بياناتك مع أي طرف ثالث.
+يتم استخدام البريد الإلكتروني فقط لتسجيل الدخول.
+</p>
+</div>
+
 </div>
 
 <!-- Firebase -->
@@ -130,12 +124,17 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let currentUser = null;
+let currentUser=null;
+
+function showPage(page){
+  document.querySelectorAll(".card").forEach(el=>el.classList.add("hidden"));
+  document.getElementById(page).classList.remove("hidden");
+}
 
 function register(){
   auth.createUserWithEmailAndPassword(email.value,password.value)
-  .then(user=>{
-    currentUser = user.user;
+  .then(u=>{
+    currentUser=u.user;
     db.collection("users").doc(currentUser.uid).set({points:100});
   });
 }
@@ -146,76 +145,28 @@ function login(){
 
 auth.onAuthStateChanged(user=>{
   if(user){
-    currentUser = user;
-    authDiv.style.display="none";
-    app.style.display="block";
+    currentUser=user;
+    auth.style.display="none";
+    app.classList.remove("hidden");
 
     db.collection("users").doc(user.uid).get().then(doc=>{
-      points.innerText = doc.data().points;
+      points.innerText=doc.data().points;
     });
 
-    loadAccounts();
-    loadLeaderboard();
+    load();
   }
 });
 
-function buyPoints(){
-  let ref = db.collection("users").doc(currentUser.uid);
-  ref.get().then(doc=>{
-    let p = doc.data().points + 100;
-    ref.update({points:p});
-    points.innerText = p;
-  });
-}
-
 function addLink(){
-  let ref = db.collection("users").doc(currentUser.uid);
-
-  ref.get().then(doc=>{
-    let p = doc.data().points;
-
-    if(p < 10){ alert("❌ لا توجد نقاط"); return;}
-
-    db.collection("accounts").add({url:link.value});
-    ref.update({points:p-10});
-    points.innerText = p-10;
-  });
+  db.collection("accounts").add({url:link.value});
+  load();
 }
 
-function loadAccounts(){
-  db.collection("accounts").onSnapshot(data=>{
+function load(){
+  db.collection("accounts").get().then(data=>{
     list.innerHTML="";
     data.forEach(doc=>{
-      let acc = doc.data().url;
-      list.innerHTML += `
-      <div class="account">
-        ${acc}
-        <button class="follow" onclick="follow('${acc}')">تابع</button>
-      </div>`;
-    });
-  });
-}
-
-function follow(l){
-  window.open(l,"_blank");
-
-  let ref = db.collection("users").doc(currentUser.uid);
-  ref.get().then(doc=>{
-    let p = doc.data().points + 10;
-    ref.update({points:p});
-    points.innerText = p;
-  });
-}
-
-function loadLeaderboard(){
-  db.collection("users").orderBy("points","desc").limit(5)
-  .onSnapshot(data=>{
-    leaderboard.innerHTML="";
-    data.forEach(doc=>{
-      leaderboard.innerHTML += `
-      <div class="leader">
-        👤 ${doc.id} - ⭐ ${doc.data().points}
-      </div>`;
+      list.innerHTML+=`<p>${doc.data().url}</p>`;
     });
   });
 }
