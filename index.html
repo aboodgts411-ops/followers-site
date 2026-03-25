@@ -23,6 +23,7 @@ body{
   background:#1e293b;
   padding:20px;
   border-radius:20px;
+  box-shadow:0 0 20px rgba(0,0,0,0.5);
 }
 
 input{
@@ -39,12 +40,20 @@ button{
   border:none;
   border-radius:10px;
   margin-top:10px;
+  cursor:pointer;
 }
 
 .send{background:#38bdf8;}
 .follow{background:#22c55e;}
 .buy{background:gold; color:black;}
 .logout{background:red;}
+
+.account{
+  background:#0f172a;
+  padding:10px;
+  border-radius:10px;
+  margin:10px 0;
+}
 </style>
 </head>
 
@@ -72,7 +81,11 @@ button{
 <input id="link" placeholder="رابط حسابك">
 <button class="send" onclick="addLink()">إرسال</button>
 
+<h3>👥 الحسابات</h3>
 <div id="list"></div>
+
+<h3>🏆 أفضل المستخدمين</h3>
+<div id="leaderboard"></div>
 
 <button class="logout" onclick="logout()">تسجيل الخروج</button>
 
@@ -87,6 +100,7 @@ button{
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
+// 🔥 Firebase config (كودك)
 const firebaseConfig = {
   apiKey: "AIzaSyC0BzESCHSyXZhOxF8FXxEjxs_WYIPOEhA",
   authDomain: "followers-app-f3419.firebaseapp.com",
@@ -114,7 +128,8 @@ function register(){
     db.collection("users").doc(currentUser.uid).set({
       points:100
     });
-  });
+  })
+  .catch(e=>alert(e.message));
 }
 
 // دخول
@@ -122,13 +137,15 @@ function login(){
   let email = document.getElementById("email").value;
   let pass = document.getElementById("password").value;
 
-  auth.signInWithEmailAndPassword(email, pass);
+  auth.signInWithEmailAndPassword(email, pass)
+  .catch(e=>alert(e.message));
 }
 
-// مراقبة الدخول
+// مراقبة المستخدم
 auth.onAuthStateChanged(user=>{
   if(user){
     currentUser = user;
+
     document.getElementById("auth").style.display="none";
     document.getElementById("app").style.display="block";
 
@@ -137,6 +154,7 @@ auth.onAuthStateChanged(user=>{
     });
 
     loadAccounts();
+    loadLeaderboard();
   }
 });
 
@@ -182,10 +200,10 @@ function loadAccounts(){
       let acc = doc.data().url;
 
       list.innerHTML += `
-      <p>
+      <div class="account">
         ${acc}
-        <button onclick="follow('${acc}')">تابع</button>
-      </p>`;
+        <button class="follow" onclick="follow('${acc}')">تابع</button>
+      </div>`;
     });
   });
 }
@@ -200,6 +218,22 @@ function follow(link){
     let p = doc.data().points + 10;
     ref.update({points:p});
     document.getElementById("points").innerText = p;
+  });
+}
+
+// Leaderboard
+function loadLeaderboard(){
+  db.collection("users").orderBy("points","desc").limit(5)
+  .onSnapshot(data=>{
+    let board = document.getElementById("leaderboard");
+    board.innerHTML="";
+
+    data.forEach(doc=>{
+      board.innerHTML += `
+      <p style="background:#111; padding:10px; border-radius:10px;">
+      👤 ${doc.id} — ⭐ ${doc.data().points}
+      </p>`;
+    });
   });
 }
 
