@@ -5,75 +5,39 @@
   <title>منصة المتابعين</title>
 </head>
 
-<body style="margin:0; font-family:Arial; background:linear-gradient(135deg,#0f172a,#1e293b); color:white;">
-
-<div style="display:flex; justify-content:center; align-items:center; height:100vh;">
-
-<div style="background:#1e293b; padding:30px; border-radius:20px; width:350px; box-shadow:0 0 30px rgba(0,0,0,0.5); text-align:center;">
+<body style="font-family:Arial; background:#0f172a; color:white; text-align:center; padding:50px;">
 
 <h1>🚀 Followers Boost</h1>
 
 <div id="auth">
-<h3>تسجيل / دخول</h3>
+<input id="username" placeholder="اسم المستخدم"><br><br>
+<input id="password" type="password" placeholder="كلمة المرور"><br><br>
 
-<input id="username" placeholder="اسم المستخدم"
-style="width:100%; padding:10px; margin:5px; border-radius:10px; border:none;">
-
-<input id="password" type="password" placeholder="كلمة المرور"
-style="width:100%; padding:10px; margin:5px; border-radius:10px; border:none;">
-
-<button onclick="register()"
-style="width:100%; padding:10px; margin-top:10px; border:none; border-radius:10px; background:#22c55e; color:white;">
-تسجيل
-</button>
-
-<button onclick="login()"
-style="width:100%; padding:10px; margin-top:10px; border:none; border-radius:10px; background:#3b82f6; color:white;">
-دخول
-</button>
+<button onclick="register()">تسجيل</button>
+<button onclick="login()">دخول</button>
 </div>
 
 <div id="app" style="display:none;">
-
 <h3>النقاط: <span id="points">0</span></h3>
 
-<input id="link" placeholder="رابط حسابك"
-style="width:100%; padding:10px; margin:10px 0; border-radius:10px; border:none;">
+<input id="link" placeholder="رابط حسابك"><br><br>
+<button onclick="addLink()">إرسال</button>
 
-<button onclick="addLink()"
-style="width:100%; padding:10px; border:none; border-radius:10px; background:#38bdf8; color:black;">
-إرسال
-</button>
-
-<h3 style="margin-top:20px;">👥 الحسابات</h3>
+<h3>الحسابات</h3>
 <div id="list"></div>
-
-</div>
-
-</div>
 </div>
 
 <script>
 let currentUser = null;
-
-// تحميل المستخدم تلقائياً
-let savedUser = JSON.parse(localStorage.getItem("currentUser"));
-if(savedUser){
-  currentUser = savedUser;
-  document.getElementById("auth").style.display="none";
-  document.getElementById("app").style.display="block";
-  document.getElementById("points").innerText = savedUser.points;
-}
 
 function register(){
   let user = document.getElementById("username").value;
   let pass = document.getElementById("password").value;
 
   let users = JSON.parse(localStorage.getItem("users")) || [];
+  users.push({user:user, pass:pass, points:100});
 
-  users.push({user, pass, points:100});
   localStorage.setItem("users", JSON.stringify(users));
-
   alert("تم التسجيل");
 }
 
@@ -90,4 +54,64 @@ function login(){
     localStorage.setItem("currentUser", JSON.stringify(currentUser));
 
     document.getElementById("auth").style.display="none";
-    document.get
+    document.getElementById("app").style.display="block";
+    document.getElementById("points").innerText = currentUser.points;
+  } else {
+    alert("خطأ في البيانات");
+  }
+}
+
+let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
+
+function addLink(){
+  let link = document.getElementById("link").value;
+
+  if(currentUser.points < 10){
+    alert("لا توجد نقاط كافية");
+    return;
+  }
+
+  currentUser.points -= 10;
+
+  let users = JSON.parse(localStorage.getItem("users"));
+  let index = users.findIndex(u => u.user === currentUser.user);
+  users[index] = currentUser;
+
+  localStorage.setItem("users", JSON.stringify(users));
+  localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+  document.getElementById("points").innerText = currentUser.points;
+
+  accounts.push(link);
+  localStorage.setItem("accounts", JSON.stringify(accounts));
+
+  show();
+}
+
+function show(){
+  let list = document.getElementById("list");
+  list.innerHTML="";
+
+  accounts.forEach(acc=>{
+    list.innerHTML += `<p>${acc} <button onclick="follow()">تابع</button></p>`;
+  });
+}
+
+function follow(){
+  currentUser.points += 10;
+
+  let users = JSON.parse(localStorage.getItem("users"));
+  let index = users.findIndex(u => u.user === currentUser.user);
+  users[index] = currentUser;
+
+  localStorage.setItem("users", JSON.stringify(users));
+  localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+  document.getElementById("points").innerText = currentUser.points;
+}
+
+show();
+</script>
+
+</body>
+</html>
