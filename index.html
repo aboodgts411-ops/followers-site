@@ -55,7 +55,14 @@ style="width:100%; padding:10px; border:none; border-radius:10px; background:#38
 
 <script>
 let currentUser = null;
+let savedUser = JSON.parse(localStorage.getItem("currentUser"));
 
+if(savedUser){
+  currentUser = savedUser;
+  document.getElementById("auth").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("points").innerText = savedUser.points;
+}
 function register(){
   let user = document.getElementById("username").value;
   let pass = document.getElementById("password").value;
