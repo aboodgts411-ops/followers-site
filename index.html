@@ -42,7 +42,7 @@ function register(){
 
   let users = JSON.parse(localStorage.getItem("users")) || [];
 
-  users.push({user, pass, points:0});
+  users.push({user, pass, points:100});
   localStorage.setItem("users", JSON.stringify(users));
 
   alert("تم التسجيل");
