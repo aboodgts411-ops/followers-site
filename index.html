@@ -1,27 +1,88 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>Followers Boost Online</title>
+<meta charset="UTF-8">
+<title>Followers Boost Pro</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
+  text-align:center;
+}
+
+.container{
+  max-width:400px;
+  margin:auto;
+  padding:20px;
+}
+
+.card{
+  background:#1e293b;
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border-radius:10px;
+  border:none;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  margin-top:10px;
+  cursor:pointer;
+}
+
+.send{background:#38bdf8;}
+.follow{background:#22c55e; margin-top:5px;}
+.buy{background:gold; color:black;}
+.logout{background:red;}
+
+.account{
+  background:#0f172a;
+  padding:10px;
+  border-radius:10px;
+  margin:10px 0;
+}
+</style>
 </head>
 
-<body style="font-family:Arial; text-align:center; background:#0f172a; color:white; padding:50px;">
+<body>
 
-<h1>🌐 Followers Boost (Online)</h1>
+<div class="container">
+<div class="card">
 
-<input id="link" placeholder="رابط حسابك" style="padding:10px; width:250px;">
-<br><br>
-<button onclick="addLink()" style="padding:10px;">إرسال</button>
+<h1>🚀 Followers Boost Pro</h1>
 
-<h3>الحسابات</h3>
+<h3>النقاط: <span id="points">100</span></h3>
+
+<button class="buy" onclick="buyPoints()">💰 شراء نقاط</button>
+
+<input id="link" placeholder="رابط حسابك">
+<button class="send" onclick="addLink()">إرسال</button>
+
+<h3>👥 الحسابات</h3>
 <div id="list"></div>
 
-<!-- Firebase compat version -->
+</div>
+</div>
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-// 🔥 كودك تم وضعه هنا جاهز
+// 🔥 إعداد Firebase (كودك)
 const firebaseConfig = {
   apiKey: "AIzaSyC0BzESCHSyXZhOxF8FXxEjxs_WYIPOEhA",
   authDomain: "followers-app-f3419.firebaseapp.com",
@@ -31,33 +92,65 @@ const firebaseConfig = {
   appId: "1:351403636037:web:e6d1a3122078ec083c3a2c"
 };
 
-// تشغيل Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// 🧠 نظام النقاط
+let points = localStorage.getItem("points") || 100;
+document.getElementById("points").innerText = points;
+
+function buyPoints(){
+  points = parseInt(points) + 100;
+  localStorage.setItem("points", points);
+  document.getElementById("points").innerText = points;
+}
+
+// ➕ إضافة رابط
 function addLink(){
   let link = document.getElementById("link").value;
 
+  if(points < 10){
+    alert("❌ لا توجد نقاط");
+    return;
+  }
+
   db.collection("accounts").add({
     url: link
-  }).then(()=>{
-    show();
   });
+
+  points -= 10;
+  localStorage.setItem("points", points);
+  document.getElementById("points").innerText = points;
 }
 
-function show(){
+// 🔴 عرض مباشر (Real-time)
+db.collection("accounts").onSnapshot((data)=>{
   let list = document.getElementById("list");
   list.innerHTML = "";
 
-  db.collection("accounts").get().then((data)=>{
-    data.forEach(doc=>{
-      list.innerHTML += `<p>${doc.data().url}</p>`;
-    });
-  });
-}
+  data.forEach(doc=>{
+    let acc = doc.data().url;
 
-// عرض البيانات عند فتح الموقع
-show();
+    list.innerHTML += `
+    <div class="account">
+      ${acc}
+      <button class="follow" onclick="follow('${acc}')">
+      🔗 تابع
+      </button>
+    </div>`;
+  });
+});
+
+// 🟢 متابعة + نقاط
+function follow(link){
+  window.open(link, "_blank");
+
+  setTimeout(()=>{
+    points = parseInt(points) + 10;
+    localStorage.setItem("points", points);
+    document.getElementById("points").innerText = points;
+  }, 3000);
+}
 </script>
 
 </body>
