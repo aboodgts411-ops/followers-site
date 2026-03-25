@@ -75,7 +75,7 @@ function register(){
   alert("تم التسجيل");
 }
 
-function login(){
+function login(localStorage.setItem("currentUser", JSON.stringify(currentUser));){
   let user = document.getElementById("username").value;
   let pass = document.getElementById("password").value;
 
