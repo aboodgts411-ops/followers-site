@@ -55,14 +55,16 @@ style="width:100%; padding:10px; border:none; border-radius:10px; background:#38
 
 <script>
 let currentUser = null;
-let savedUser = JSON.parse(localStorage.getItem("currentUser"));
 
+// تحميل المستخدم تلقائياً
+let savedUser = JSON.parse(localStorage.getItem("currentUser"));
 if(savedUser){
   currentUser = savedUser;
   document.getElementById("auth").style.display="none";
   document.getElementById("app").style.display="block";
   document.getElementById("points").innerText = savedUser.points;
 }
+
 function register(){
   let user = document.getElementById("username").value;
   let pass = document.getElementById("password").value;
@@ -75,7 +77,7 @@ function register(){
   alert("تم التسجيل");
 }
 
-function login(localStorage.setItem("currentUser", JSON.stringify(currentUser));){
+function login(){
   let user = document.getElementById("username").value;
   let pass = document.getElementById("password").value;
 
@@ -85,29 +87,7 @@ function login(localStorage.setItem("currentUser", JSON.stringify(currentUser));
 
   if(found){
     currentUser = found;
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
     document.getElementById("auth").style.display="none";
-    document.getElementById("app").style.display="block";
-    document.getElementById("points").innerText = found.points;
-  } else {
-    alert("خطأ");
-  }
-}
-
-let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
-
-function addLink(){
-  let link = document.getElementById("link").value;
-
-  if(currentUser.points < 10){
-    alert("❌ ليس لديك نقاط كافية");
-    return;
-  }
-
-  currentUser.points -= 10;
-
-  let users = JSON.parse(localStorage.getItem("users"));
-  let index = users.findIndex(u => u.user === currentUser.user);
-  users[index] = currentUser;
-  localStorage.setItem("users", JSON.stringify(users));
-
-  document.get
+    document.get
