@@ -5,32 +5,52 @@
   <title>منصة المتابعين</title>
 </head>
 
-<body style="background:#0f172a; color:white; text-align:center; font-family:Arial; padding:50px;">
+<body style="margin:0; font-family:Arial; background:linear-gradient(135deg,#0f172a,#1e293b); color:white;">
 
-<h1>🚀 موقعي الجديد</h1>
+<div style="display:flex; justify-content:center; align-items:center; height:100vh;">
+
+<div style="background:#1e293b; padding:30px; border-radius:20px; width:350px; box-shadow:0 0 30px rgba(0,0,0,0.5); text-align:center;">
+
+<h1>🚀 Followers Boost</h1>
 
 <div id="auth">
+<h3>تسجيل / دخول</h3>
 
-<h2>تسجيل</h2>
-<input id="username" placeholder="اسم المستخدم"><br><br>
-<input id="password" type="password" placeholder="كلمة المرور"><br><br>
+<input id="username" placeholder="اسم المستخدم"
+style="width:100%; padding:10px; margin:5px; border-radius:10px; border:none;">
 
-<button onclick="register()">تسجيل</button>
-<button onclick="login()">دخول</button>
+<input id="password" type="password" placeholder="كلمة المرور"
+style="width:100%; padding:10px; margin:5px; border-radius:10px; border:none;">
 
+<button onclick="register()"
+style="width:100%; padding:10px; margin-top:10px; border:none; border-radius:10px; background:#22c55e; color:white;">
+تسجيل
+</button>
+
+<button onclick="login()"
+style="width:100%; padding:10px; margin-top:10px; border:none; border-radius:10px; background:#3b82f6; color:white;">
+دخول
+</button>
 </div>
 
 <div id="app" style="display:none;">
 
-<h2>أضف حسابك</h2>
-<input id="link" placeholder="رابط حسابك"><br><br>
-<button onclick="addLink()">إرسال</button>
-
 <h3>النقاط: <span id="points">0</span></h3>
 
-<h2>الحسابات</h2>
+<input id="link" placeholder="رابط حسابك"
+style="width:100%; padding:10px; margin:10px 0; border-radius:10px; border:none;">
+
+<button onclick="addLink()"
+style="width:100%; padding:10px; border:none; border-radius:10px; background:#38bdf8; color:black;">
+إرسال
+</button>
+
+<h3 style="margin-top:20px;">👥 الحسابات</h3>
 <div id="list"></div>
 
+</div>
+
+</div>
 </div>
 
 <script>
@@ -83,34 +103,4 @@ function addLink(){
   users[index] = currentUser;
   localStorage.setItem("users", JSON.stringify(users));
 
-  document.getElementById("points").innerText = currentUser.points;
-
-  accounts.push(link);
-  localStorage.setItem("accounts", JSON.stringify(accounts));
-
-  show();
-}
-
-function show(){
-  let list = document.getElementById("list");
-  list.innerHTML="";
-  accounts.forEach(acc=>{
-    list.innerHTML += `<p>${acc} <button onclick="follow()">تابع</button></p>`;
-  });
-}
-
-function follow(){
-  currentUser.points += 10;
-
-  let users = JSON.parse(localStorage.getItem("users"));
-  let index = users.findIndex(u => u.user === currentUser.user);
-  users[index] = currentUser;
-  localStorage.setItem("users", JSON.stringify(users));
-
-  document.getElementById("points").innerText = currentUser.points;
-}
-show();
-</script>
-
-</body>
-</html>
+  document.get
