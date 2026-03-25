@@ -66,7 +66,6 @@ style="width:100%; padding:10px; border:none; border-radius:10px; background:#38
 <script>
 let currentUser = null;
 
-// ✅ تسجيل دخول تلقائي
 let savedUser = JSON.parse(localStorage.getItem("currentUser"));
 if(savedUser){
   currentUser = savedUser;
@@ -76,22 +75,20 @@ if(savedUser){
 }
 
 function register(){
-  let user = document.getElementById("username").value;
-  let pass = document.getElementById("password").value;
+  let user = username.value;
+  let pass = password.value;
 
   let users = JSON.parse(localStorage.getItem("users")) || [];
-  users.push({user:user, pass:pass, points:100});
-
+  users.push({user, pass, points:100});
   localStorage.setItem("users", JSON.stringify(users));
   alert("تم التسجيل");
 }
 
 function login(){
-  let user = document.getElementById("username").value;
-  let pass = document.getElementById("password").value;
+  let user = username.value;
+  let pass = password.value;
 
   let users = JSON.parse(localStorage.getItem("users")) || [];
-
   let found = users.find(u => u.user === user && u.pass === pass);
 
   if(found){
@@ -124,7 +121,6 @@ function addLink(){
 
   currentUser.points -= 10;
   localStorage.setItem("currentUser", JSON.stringify(currentUser));
-
   document.getElementById("points").innerText = currentUser.points;
 
   accounts.push(link);
@@ -137,19 +133,27 @@ function show(){
   let list = document.getElementById("list");
   list.innerHTML="";
   accounts.forEach(acc=>{
-    list.innerHTML += `<p style="background:#0f172a; padding:10px; border-radius:10px; margin:5px;">
-    ${acc} 
-    <button onclick="follow()" style="margin-left:10px; background:#22c55e; color:white; border:none; padding:5px 10px; border-radius:8px;">
-    تابع
+    list.innerHTML += `
+    <p style="background:#0f172a; padding:10px; border-radius:10px; margin:5px;">
+    ${acc}
+    <br><br>
+    <button onclick="openAndReward('${acc}')" 
+    style="background:#22c55e; color:white; border:none; padding:5px 10px; border-radius:8px;">
+    🔗 افتح وتابع
     </button>
     </p>`;
   });
 }
 
-function follow(){
-  currentUser.points += 10;
-  localStorage.setItem("currentUser", JSON.stringify(currentUser));
-  document.getElementById("points").innerText = currentUser.points;
+function openAndReward(link){
+  window.open(link, "_blank");
+
+  setTimeout(()=>{
+    currentUser.points += 10;
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    document.getElementById("points").innerText = currentUser.points;
+    alert("✅ تم احتساب النقاط");
+  }, 3000);
 }
 
 function logout(){
