@@ -2,29 +2,55 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>منصة المتابعين</title>
+  <title>Followers Boost</title>
 </head>
 
-<body style="font-family:Arial; background:#0f172a; color:white; text-align:center; padding:50px;">
+<body style="margin:0; font-family:Arial; background:linear-gradient(135deg,#0f172a,#1e293b); color:white;">
+
+<div style="display:flex; justify-content:center; align-items:center; height:100vh;">
+
+<div style="background:#1e293b; padding:30px; border-radius:20px; width:350px; box-shadow:0 0 30px rgba(0,0,0,0.5); text-align:center;">
 
 <h1>🚀 Followers Boost</h1>
 
 <div id="auth">
-<input id="username" placeholder="اسم المستخدم"><br><br>
-<input id="password" type="password" placeholder="كلمة المرور"><br><br>
+<h3>تسجيل / دخول</h3>
 
-<button onclick="register()">تسجيل</button>
-<button onclick="login()">دخول</button>
+<input id="username" placeholder="اسم المستخدم"
+style="width:100%; padding:10px; margin:5px; border-radius:10px; border:none;">
+
+<input id="password" type="password" placeholder="كلمة المرور"
+style="width:100%; padding:10px; margin:5px; border-radius:10px; border:none;">
+
+<button onclick="register()"
+style="width:100%; padding:10px; margin-top:10px; border:none; border-radius:10px; background:#22c55e; color:white;">
+تسجيل
+</button>
+
+<button onclick="login()"
+style="width:100%; padding:10px; margin-top:10px; border:none; border-radius:10px; background:#3b82f6; color:white;">
+دخول
+</button>
 </div>
 
 <div id="app" style="display:none;">
+
 <h3>النقاط: <span id="points">0</span></h3>
 
-<input id="link" placeholder="رابط حسابك"><br><br>
-<button onclick="addLink()">إرسال</button>
+<input id="link" placeholder="رابط حسابك"
+style="width:100%; padding:10px; margin:10px 0; border-radius:10px; border:none;">
 
-<h3>الحسابات</h3>
+<button onclick="addLink()"
+style="width:100%; padding:10px; border:none; border-radius:10px; background:#38bdf8; color:black;">
+إرسال
+</button>
+
+<h3 style="margin-top:20px;">👥 الحسابات</h3>
 <div id="list"></div>
+
+</div>
+
+</div>
 </div>
 
 <script>
@@ -51,13 +77,11 @@ function login(){
 
   if(found){
     currentUser = found;
-    localStorage.setItem("currentUser", JSON.stringify(currentUser));
-
     document.getElementById("auth").style.display="none";
     document.getElementById("app").style.display="block";
     document.getElementById("points").innerText = currentUser.points;
   } else {
-    alert("خطأ في البيانات");
+    alert("خطأ");
   }
 }
 
@@ -67,7 +91,7 @@ function addLink(){
   let link = document.getElementById("link").value;
 
   if(currentUser.points < 10){
-    alert("لا توجد نقاط كافية");
+    alert("❌ ليس لديك نقاط كافية");
     return;
   }
 
@@ -78,7 +102,6 @@ function addLink(){
   users[index] = currentUser;
 
   localStorage.setItem("users", JSON.stringify(users));
-  localStorage.setItem("currentUser", JSON.stringify(currentUser));
 
   document.getElementById("points").innerText = currentUser.points;
 
@@ -91,9 +114,13 @@ function addLink(){
 function show(){
   let list = document.getElementById("list");
   list.innerHTML="";
-
   accounts.forEach(acc=>{
-    list.innerHTML += `<p>${acc} <button onclick="follow()">تابع</button></p>`;
+    list.innerHTML += `<p style="background:#0f172a; padding:10px; border-radius:10px; margin:5px;">
+    ${acc} 
+    <button onclick="follow()" style="margin-left:10px; padding:5px 10px; border:none; border-radius:8px; background:#22c55e; color:white;">
+    تابع
+    </button>
+    </p>`;
   });
 }
 
@@ -105,7 +132,6 @@ function follow(){
   users[index] = currentUser;
 
   localStorage.setItem("users", JSON.stringify(users));
-  localStorage.setItem("currentUser", JSON.stringify(currentUser));
 
   document.getElementById("points").innerText = currentUser.points;
 }
