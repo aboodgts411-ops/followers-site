@@ -66,6 +66,15 @@ style="width:100%; padding:10px; border:none; border-radius:10px; background:#38
 <script>
 let currentUser = null;
 
+// ✅ تسجيل دخول تلقائي
+let savedUser = JSON.parse(localStorage.getItem("currentUser"));
+if(savedUser){
+  currentUser = savedUser;
+  document.getElementById("auth").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("points").innerText = currentUser.points;
+}
+
 function register(){
   let user = document.getElementById("username").value;
   let pass = document.getElementById("password").value;
@@ -87,6 +96,8 @@ function login(){
 
   if(found){
     currentUser = found;
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
     document.getElementById("auth").style.display="none";
     document.getElementById("app").style.display="block";
     document.getElementById("points").innerText = currentUser.points;
@@ -97,6 +108,7 @@ function login(){
 
 function buyPoints(){
   currentUser.points += 100;
+  localStorage.setItem("currentUser", JSON.stringify(currentUser));
   document.getElementById("points").innerText = currentUser.points;
 }
 
@@ -111,6 +123,8 @@ function addLink(){
   }
 
   currentUser.points -= 10;
+  localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
   document.getElementById("points").innerText = currentUser.points;
 
   accounts.push(link);
@@ -134,10 +148,12 @@ function show(){
 
 function follow(){
   currentUser.points += 10;
+  localStorage.setItem("currentUser", JSON.stringify(currentUser));
   document.getElementById("points").innerText = currentUser.points;
 }
 
 function logout(){
+  localStorage.removeItem("currentUser");
   location.reload();
 }
 
