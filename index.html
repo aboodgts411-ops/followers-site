@@ -10,12 +10,12 @@ body{
   font-family:Arial;
   background:#0f172a;
   color:white;
-  text-align:center;
 }
 
 nav{
   background:#020617;
   padding:10px;
+  text-align:center;
 }
 
 nav button{
@@ -32,6 +32,12 @@ nav button{
   padding:20px;
 }
 
+.card{
+  background:#1e293b;
+  padding:20px;
+  border-radius:15px;
+}
+
 .hidden{display:none;}
 
 input, button{
@@ -42,10 +48,11 @@ input, button{
   border:none;
 }
 
-.card{
-  background:#1e293b;
-  padding:20px;
-  border-radius:15px;
+.account{
+  background:#020617;
+  padding:10px;
+  border-radius:10px;
+  margin:5px 0;
 }
 </style>
 </head>
@@ -74,11 +81,12 @@ input, button{
 
 <div id="app" class="hidden">
 
-<h3>النقاط: <span id="points">0</span></h3>
+<h3>⭐ النقاط: <span id="points">0</span></h3>
 
 <input id="link" placeholder="رابط حسابك">
 <button onclick="addLink()">إرسال</button>
 
+<h3>👥 الحسابات</h3>
 <div id="list"></div>
 
 <button onclick="logout()">تسجيل الخروج</button>
@@ -91,18 +99,32 @@ input, button{
 <div id="about" class="card hidden">
 <h2>من نحن</h2>
 <p>
-هذا الموقع يهدف إلى مساعدة المستخدمين على زيادة متابعيهم
-من خلال تبادل التفاعل بين المستخدمين بطريقة بسيطة وسريعة.
+موقع Followers Boost هو منصة تهدف إلى مساعدة المستخدمين على زيادة التفاعل والمتابعين على وسائل التواصل الاجتماعي بطريقة سهلة وآمنة.
+</p>
+<p>
+نحن نوفر نظام تبادل التفاعل بين المستخدمين حيث يمكن لكل مستخدم إضافة حسابه ومتابعة الآخرين مقابل نقاط.
 </p>
 </div>
 
 <!-- سياسة الخصوصية -->
 <div id="privacy" class="card hidden">
 <h2>سياسة الخصوصية</h2>
+
+<p>نحن نحترم خصوصيتك ونسعى لحماية بياناتك.</p>
+
+<h3>جمع المعلومات</h3>
+<p>نقوم بجمع البريد الإلكتروني فقط لإنشاء الحساب.</p>
+
+<h3>استخدام المعلومات</h3>
+<p>نستخدم البيانات لتحسين تجربة المستخدم.</p>
+
+<h3>الإعلانات</h3>
 <p>
-نحن نحترم خصوصيتك ولا نقوم بمشاركة بياناتك مع أي طرف ثالث.
-يتم استخدام البريد الإلكتروني فقط لتسجيل الدخول.
+نستخدم خدمات مثل Google AdSense التي قد تستخدم ملفات تعريف الارتباط لعرض إعلانات مخصصة.
 </p>
+
+<h3>الموافقة</h3>
+<p>باستخدام الموقع فإنك توافق على هذه السياسة.</p>
 </div>
 
 </div>
@@ -124,53 +146,64 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let currentUser=null;
+let currentUser = null;
 
+// تنقل الصفحات
 function showPage(page){
   document.querySelectorAll(".card").forEach(el=>el.classList.add("hidden"));
   document.getElementById(page).classList.remove("hidden");
 }
 
+// تسجيل
 function register(){
   auth.createUserWithEmailAndPassword(email.value,password.value)
   .then(u=>{
     currentUser=u.user;
     db.collection("users").doc(currentUser.uid).set({points:100});
-  });
+  })
+  .catch(e=>alert(e.message));
 }
 
+// دخول
 function login(){
-  auth.signInWithEmailAndPassword(email.value,password.value);
+  auth.signInWithEmailAndPassword(email.value,password.value)
+  .catch(e=>alert(e.message));
 }
 
+// مراقبة المستخدم
 auth.onAuthStateChanged(user=>{
   if(user){
     currentUser=user;
+
     auth.style.display="none";
     app.classList.remove("hidden");
 
     db.collection("users").doc(user.uid).get().then(doc=>{
-      points.innerText=doc.data().points;
+      points.innerText = doc.data().points;
     });
 
-    load();
+    loadAccounts();
   }
 });
 
+// إضافة رابط
 function addLink(){
   db.collection("accounts").add({url:link.value});
-  load();
+  loadAccounts();
 }
 
-function load(){
+// عرض الحسابات
+function loadAccounts(){
   db.collection("accounts").get().then(data=>{
     list.innerHTML="";
     data.forEach(doc=>{
-      list.innerHTML+=`<p>${doc.data().url}</p>`;
+      list.innerHTML += `
+      <div class="account">${doc.data().url}</div>`;
     });
   });
 }
 
+// خروج
 function logout(){
   auth.signOut();
   location.reload();
