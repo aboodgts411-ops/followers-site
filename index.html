@@ -72,15 +72,6 @@ input, button{
 
 <h1>🚀 Followers Boost</h1>
 
-<!-- إعلان علوي -->
-<div>
-  <ins class="adsbygoogle"
-       style="display:block"
-       data-ad-client="ca-pub-XXXXXXX"
-       data-ad-slot="111111"
-       data-ad-format="auto"></ins>
-</div>
-
 <div id="auth">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
@@ -97,15 +88,6 @@ input, button{
 
 <h3>👥 الحسابات</h3>
 <div id="list"></div>
-
-<!-- إعلان وسط -->
-<div>
-  <ins class="adsbygoogle"
-       style="display:block"
-       data-ad-client="ca-pub-XXXXXXX"
-       data-ad-slot="222222"
-       data-ad-format="auto"></ins>
-</div>
 
 <button onclick="logout()">تسجيل الخروج</button>
 
@@ -125,9 +107,7 @@ input, button{
 <!-- سياسة الخصوصية -->
 <div id="privacy" class="card hidden">
 <h2>سياسة الخصوصية</h2>
-<p>نحن نحترم خصوصيتك.</p>
-<p>نستخدم Google AdSense لعرض الإعلانات.</p>
-<p>نستخدم البريد الإلكتروني فقط لتسجيل الحساب.</p>
+<p>نحن نحترم خصوصيتك ونستخدم Google AdSense للإعلانات.</p>
 </div>
 
 </div>
@@ -149,9 +129,18 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let currentUser=null;
+// تعريف العناصر
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const authDiv = document.getElementById("auth");
+const appDiv = document.getElementById("app");
+const pointsSpan = document.getElementById("points");
+const linkInput = document.getElementById("link");
+const listDiv = document.getElementById("list");
 
-// تنقل
+let currentUser = null;
+
+// التنقل
 function showPage(p){
   document.querySelectorAll(".card").forEach(el=>el.classList.add("hidden"));
   document.getElementById(p).classList.remove("hidden");
@@ -159,27 +148,32 @@ function showPage(p){
 
 // تسجيل
 function register(){
-  auth.createUserWithEmailAndPassword(email.value,password.value)
-  .then(u=>{
-    currentUser=u.user;
+  auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value)
+  .then(user=>{
+    currentUser = user.user;
     db.collection("users").doc(currentUser.uid).set({points:100});
-  });
+    alert("تم التسجيل بنجاح");
+  })
+  .catch(e=>alert(e.message));
 }
 
 // دخول
 function login(){
-  auth.signInWithEmailAndPassword(email.value,password.value);
+  auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value)
+  .then(()=>alert("تم تسجيل الدخول"))
+  .catch(e=>alert(e.message));
 }
 
-// مراقبة
+// مراقبة المستخدم
 auth.onAuthStateChanged(user=>{
   if(user){
-    currentUser=user;
-    auth.style.display="none";
-    app.classList.remove("hidden");
+    currentUser = user;
+
+    authDiv.style.display = "none";
+    appDiv.classList.remove("hidden");
 
     db.collection("users").doc(user.uid).get().then(doc=>{
-      points.innerText=doc.data().points;
+      pointsSpan.innerText = doc.data().points;
     });
 
     load();
@@ -188,16 +182,16 @@ auth.onAuthStateChanged(user=>{
 
 // إضافة رابط
 function addLink(){
-  db.collection("accounts").add({url:link.value});
+  db.collection("accounts").add({url: linkInput.value});
   load();
 }
 
 // عرض الحسابات
 function load(){
   db.collection("accounts").get().then(data=>{
-    list.innerHTML="";
+    listDiv.innerHTML = "";
     data.forEach(doc=>{
-      list.innerHTML+=`<div class="account">${doc.data().url}</div>`;
+      listDiv.innerHTML += `<div class="account">${doc.data().url}</div>`;
     });
   });
 }
@@ -207,15 +201,6 @@ function logout(){
   auth.signOut();
   location.reload();
 }
-</script>
-
-<!-- تفعيل الإعلانات -->
-<script async 
-src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXX"
-crossorigin="anonymous"></script>
-
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
 </script>
 
 </body>
