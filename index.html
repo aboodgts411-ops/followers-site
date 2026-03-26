@@ -62,7 +62,7 @@ input, button{
 
 <h3>⭐ النقاط: <span id="points">0</span></h3>
 
-<button onclick="buyPoints()">💰 شراء 100 نقطة</button>
+<button onclick="buyPoints()">💳 شراء 100 نقطة (1$)</button>
 
 <input id="link" placeholder="رابط حسابك">
 <button onclick="addLink()">إرسال</button>
@@ -143,15 +143,10 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
-// شراء نقاط
+// 💰 شراء نقاط عبر PayPal
 function buyPoints(){
-  let ref=db.collection("users").doc(currentUser.uid);
-
-  ref.get().then(doc=>{
-    let p=doc.data().points+100;
-    ref.update({points:p});
-    pointsSpan.innerText=p;
-  });
+  window.open("https://paypal.me/Lakrad989/1", "_blank");
+  alert("بعد الدفع تواصل معنا لإضافة النقاط (سيتم أتمتة ذلك لاحقًا)");
 }
 
 // إضافة رابط
@@ -228,4 +223,4 @@ function logout(){
 </script>
 
 </body>
-  </html>
+</html>
