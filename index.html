@@ -23,7 +23,6 @@ body{
   padding:20px;
   border-radius:20px;
   box-shadow:0 0 20px rgba(0,0,0,0.4);
-  margin-bottom:20px;
 }
 
 h1{
@@ -53,24 +52,11 @@ button{
   border:none;
   cursor:pointer;
   font-weight:bold;
-  transition:0.3s;
 }
 
-button:hover{
-  transform:scale(1.05);
-}
-
-.btn-main{
-  background:linear-gradient(90deg,#22c55e,#16a34a);
-}
-
-.btn-buy{
-  background:linear-gradient(90deg,#f59e0b,#f97316);
-}
-
-.btn-follow{
-  background:linear-gradient(90deg,#38bdf8,#0ea5e9);
-}
+.btn-main{background:#22c55e;}
+.btn-buy{background:#f59e0b;}
+.btn-follow{background:#38bdf8;}
 
 .account{
   background:#020617;
@@ -84,8 +70,8 @@ button:hover{
 <body>
 
 <div class="container">
-
 <div class="card">
+
 <h1>🚀 Followers Boost</h1>
 
 <div id="auth">
@@ -101,7 +87,7 @@ button:hover{
 
 <button class="btn-buy" onclick="buyPoints()">💳 شراء 100 نقطة</button>
 
-<textarea id="message" placeholder="أكتب: دفعت 1$"></textarea>
+<textarea id="message" placeholder="اكتب: دفعت 1$"></textarea>
 <button class="btn-main" onclick="sendRequest()">📩 إرسال الطلب</button>
 
 <input id="link" placeholder="رابط حسابك">
@@ -148,7 +134,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 🔴 تم وضع ايميلك هنا
 const ADMIN_EMAIL = "abood.gts.411@gmail.com";
 
 let currentUser=null;
@@ -157,18 +142,18 @@ auth.onAuthStateChanged(user=>{
   if(user){
     currentUser=user;
 
-    document.getElementById("auth").style.display="none";
-    document.getElementById("app").classList.remove("hidden");
+    auth.style.display="none";
+    app.classList.remove("hidden");
 
     db.collection("users").doc(user.uid).get().then(doc=>{
-      document.getElementById("points").innerText=doc.data().points;
+      points.innerText=doc.data().points;
     });
 
     loadAccounts();
     loadLeaderboard();
 
     if(user.email===ADMIN_EMAIL){
-      document.getElementById("adminPanel").classList.remove("hidden");
+      adminPanel.classList.remove("hidden");
       loadRequests();
     }
   }
@@ -246,30 +231,50 @@ function loadAccounts(){
   });
 }
 
+// 🔥 حماية من الغش
 function follow(url,btn){
-  btn.disabled=true;
-  window.open(url,"_blank");
 
-  let t=10;
+  let userId = currentUser.uid;
+  let accountId = btoa(url);
 
-  let timer=setInterval(()=>{
-    t--;
-    btn.innerText="⏳ "+t;
+  let ref = db.collection("follows").doc(userId + "_" + accountId);
 
-    if(t<=0){
-      clearInterval(timer);
+  ref.get().then(doc=>{
 
-      let ref=db.collection("users").doc(currentUser.uid);
-
-      ref.get().then(doc=>{
-        let p=doc.data().points+10;
-        ref.update({points:p});
-        points.innerText=p;
-      });
-
-      btn.innerText="✔";
+    if(doc.exists){
+      alert("لقد استخدمت هذا الحساب من قبل ❌");
+      return;
     }
-  },1000);
+
+    btn.disabled=true;
+    btn.innerText="⏳ انتظر";
+
+    window.open(url,"_blank");
+
+    let t=10;
+
+    let timer=setInterval(()=>{
+      t--;
+      btn.innerText="⏳ "+t;
+
+      if(t<=0){
+        clearInterval(timer);
+
+        ref.set({done:true});
+
+        let userRef=db.collection("users").doc(userId);
+
+        userRef.get().then(d=>{
+          let p=d.data().points+8;
+          userRef.update({points:p});
+          points.innerText=p;
+        });
+
+        btn.innerText="✔";
+      }
+    },1000);
+
+  });
 }
 
 function loadLeaderboard(){
