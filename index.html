@@ -51,6 +51,7 @@ input, button{
 
 <h1>🚀 Followers Boost Pro</h1>
 
+<!-- تسجيل -->
 <div id="auth">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
@@ -58,6 +59,7 @@ input, button{
 <button onclick="login()">دخول</button>
 </div>
 
+<!-- التطبيق -->
 <div id="app" class="hidden">
 
 <h3>⭐ النقاط: <span id="points">0</span></h3>
@@ -74,6 +76,17 @@ input, button{
 <div id="leaderboard"></div>
 
 <button onclick="logout()">تسجيل الخروج</button>
+
+</div>
+
+<!-- 🔐 لوحة التحكم السرية -->
+<div id="adminPanel" class="hidden">
+
+<h2>🔐 لوحة التحكم</h2>
+
+<input id="adminUid" placeholder="User ID">
+<input id="adminPoints" placeholder="عدد النقاط">
+<button onclick="addPoints()">➕ إضافة نقاط</button>
 
 </div>
 
@@ -101,6 +114,8 @@ const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const authDiv = document.getElementById("auth");
 const appDiv = document.getElementById("app");
+const adminPanel = document.getElementById("adminPanel");
+
 const pointsSpan = document.getElementById("points");
 const linkInput = document.getElementById("link");
 const listDiv = document.getElementById("list");
@@ -108,25 +123,24 @@ const leaderboardDiv = document.getElementById("leaderboard");
 
 let currentUser = null;
 
+// 🔴 ضع ايميلك هنا
+const ADMIN_EMAIL = "abood.gts.411@gmail.com";
+
 // تسجيل
 function register(){
   auth.createUserWithEmailAndPassword(emailInput.value,passwordInput.value)
   .then(u=>{
     currentUser=u.user;
     db.collection("users").doc(currentUser.uid).set({points:100});
-    alert("تم التسجيل");
-  })
-  .catch(e=>alert(e.message));
+  });
 }
 
 // دخول
 function login(){
-  auth.signInWithEmailAndPassword(emailInput.value,passwordInput.value)
-  .then(()=>alert("تم الدخول"))
-  .catch(e=>alert(e.message));
+  auth.signInWithEmailAndPassword(emailInput.value,passwordInput.value);
 }
 
-// مراقبة المستخدم
+// مراقبة
 auth.onAuthStateChanged(user=>{
   if(user){
     currentUser=user;
@@ -140,13 +154,17 @@ auth.onAuthStateChanged(user=>{
 
     loadAccounts();
     loadLeaderboard();
+
+    // 🔐 فتح لوحة التحكم فقط لك
+    if(user.email === ADMIN_EMAIL){
+      adminPanel.classList.remove("hidden");
+    }
   }
 });
 
-// 💰 شراء نقاط عبر PayPal
+// 💳 شراء
 function buyPoints(){
-  window.open("https://paypal.me/Lakrad989/1", "_blank");
-  alert("بعد الدفع تواصل معنا لإضافة النقاط (سيتم أتمتة ذلك لاحقًا)");
+  window.open("https://paypal.me/Lakrad989/1","_blank");
 }
 
 // إضافة رابط
@@ -171,7 +189,7 @@ function loadAccounts(){
   });
 }
 
-// متابعة مع حماية
+// متابعة
 function follow(url,btn){
   btn.disabled=true;
   btn.innerText="انتظر 10 ثواني...";
@@ -200,7 +218,7 @@ function follow(url,btn){
   },1000);
 }
 
-// Leaderboard
+// 🏆 Leaderboard
 function loadLeaderboard(){
   db.collection("users").orderBy("points","desc").limit(5)
   .onSnapshot(data=>{
@@ -212,6 +230,20 @@ function loadLeaderboard(){
         👤 ${doc.id} - ⭐ ${doc.data().points}
       </div>`;
     });
+  });
+}
+
+// 🔥 إضافة نقاط (Admin)
+function addPoints(){
+  let uid = document.getElementById("adminUid").value;
+  let pts = parseInt(document.getElementById("adminPoints").value);
+
+  let ref = db.collection("users").doc(uid);
+
+  ref.get().then(doc=>{
+    let newPoints = doc.data().points + pts;
+    ref.update({points:newPoints});
+    alert("تمت الإضافة");
   });
 }
 
