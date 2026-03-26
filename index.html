@@ -32,6 +32,7 @@ input, button{
   margin:5px 0;
   border-radius:10px;
   border:none;
+  cursor:pointer;
 }
 
 .account{
@@ -48,7 +49,7 @@ input, button{
 <div class="container">
 <div class="card">
 
-<h1>🚀 Followers Boost</h1>
+<h1>🚀 Followers Boost Pro</h1>
 
 <div id="auth">
 <input id="email" placeholder="Email">
@@ -61,11 +62,16 @@ input, button{
 
 <h3>⭐ النقاط: <span id="points">0</span></h3>
 
+<button onclick="buyPoints()">💰 شراء 100 نقطة</button>
+
 <input id="link" placeholder="رابط حسابك">
 <button onclick="addLink()">إرسال</button>
 
 <h3>👥 الحسابات</h3>
 <div id="list"></div>
+
+<h3>🏆 أفضل المستخدمين</h3>
+<div id="leaderboard"></div>
 
 <button onclick="logout()">تسجيل الخروج</button>
 
@@ -98,8 +104,9 @@ const appDiv = document.getElementById("app");
 const pointsSpan = document.getElementById("points");
 const linkInput = document.getElementById("link");
 const listDiv = document.getElementById("list");
+const leaderboardDiv = document.getElementById("leaderboard");
 
-let currentUser=null;
+let currentUser = null;
 
 // تسجيل
 function register(){
@@ -107,18 +114,23 @@ function register(){
   .then(u=>{
     currentUser=u.user;
     db.collection("users").doc(currentUser.uid).set({points:100});
-  });
+    alert("تم التسجيل");
+  })
+  .catch(e=>alert(e.message));
 }
 
 // دخول
 function login(){
-  auth.signInWithEmailAndPassword(emailInput.value,passwordInput.value);
+  auth.signInWithEmailAndPassword(emailInput.value,passwordInput.value)
+  .then(()=>alert("تم الدخول"))
+  .catch(e=>alert(e.message));
 }
 
-// مراقبة
+// مراقبة المستخدم
 auth.onAuthStateChanged(user=>{
   if(user){
     currentUser=user;
+
     authDiv.style.display="none";
     appDiv.classList.remove("hidden");
 
@@ -126,59 +138,86 @@ auth.onAuthStateChanged(user=>{
       pointsSpan.innerText=doc.data().points;
     });
 
-    load();
+    loadAccounts();
+    loadLeaderboard();
   }
 });
+
+// شراء نقاط
+function buyPoints(){
+  let ref=db.collection("users").doc(currentUser.uid);
+
+  ref.get().then(doc=>{
+    let p=doc.data().points+100;
+    ref.update({points:p});
+    pointsSpan.innerText=p;
+  });
+}
 
 // إضافة رابط
 function addLink(){
   db.collection("accounts").add({url:linkInput.value});
-  load();
+  loadAccounts();
 }
 
-// عرض الحسابات + زر تابع محمي
-function load(){
+// عرض الحسابات
+function loadAccounts(){
   db.collection("accounts").get().then(data=>{
     listDiv.innerHTML="";
     data.forEach(doc=>{
-      let url = doc.data().url;
+      let url=doc.data().url;
 
-      listDiv.innerHTML += `
+      listDiv.innerHTML+=`
       <div class="account">
         ${url}
-        <button onclick="follow('${url}', this)">تابع</button>
+        <button onclick="follow('${url}',this)">تابع</button>
       </div>`;
     });
   });
 }
 
-// 🔥 حماية (انتظار 10 ثواني)
-function follow(url, btn){
-  btn.disabled = true;
-  btn.innerText = "انتظر 10 ثواني...";
+// متابعة مع حماية
+function follow(url,btn){
+  btn.disabled=true;
+  btn.innerText="انتظر 10 ثواني...";
 
-  window.open(url, "_blank");
+  window.open(url,"_blank");
 
-  let time = 10;
+  let t=10;
 
-  let timer = setInterval(()=>{
-    time--;
-    btn.innerText = "انتظر " + time + " ث";
+  let timer=setInterval(()=>{
+    t--;
+    btn.innerText="انتظر "+t+" ث";
 
-    if(time <= 0){
+    if(t<=0){
       clearInterval(timer);
 
-      btn.innerText = "تم ✔";
+      btn.innerText="تم ✔";
 
-      let ref = db.collection("users").doc(currentUser.uid);
+      let ref=db.collection("users").doc(currentUser.uid);
 
       ref.get().then(doc=>{
-        let p = doc.data().points + 10;
+        let p=doc.data().points+10;
         ref.update({points:p});
-        pointsSpan.innerText = p;
+        pointsSpan.innerText=p;
       });
     }
   },1000);
+}
+
+// Leaderboard
+function loadLeaderboard(){
+  db.collection("users").orderBy("points","desc").limit(5)
+  .onSnapshot(data=>{
+    leaderboardDiv.innerHTML="";
+
+    data.forEach(doc=>{
+      leaderboardDiv.innerHTML+=`
+      <div class="account">
+        👤 ${doc.id} - ⭐ ${doc.data().points}
+      </div>`;
+    });
+  });
 }
 
 // خروج
@@ -189,4 +228,4 @@ function logout(){
 </script>
 
 </body>
-</html>
+  </html>
