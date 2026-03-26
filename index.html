@@ -8,7 +8,7 @@
 body{
   margin:0;
   font-family:Arial;
-  background:#0f172a;
+  background:linear-gradient(135deg,#0f172a,#1e293b);
   color:white;
 }
 
@@ -21,25 +21,62 @@ body{
 .card{
   background:#1e293b;
   padding:20px;
-  border-radius:15px;
+  border-radius:20px;
+  box-shadow:0 0 20px rgba(0,0,0,0.4);
+  margin-bottom:20px;
+}
+
+h1{
+  text-align:center;
+  background:linear-gradient(90deg,#38bdf8,#22c55e);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
 }
 
 .hidden{display:none;}
 
-input, textarea, button{
+input, textarea{
   width:100%;
-  padding:10px;
-  margin:5px 0;
-  border-radius:10px;
+  padding:12px;
+  margin:6px 0;
+  border-radius:12px;
+  border:none;
+  background:#020617;
+  color:white;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border-radius:12px;
   border:none;
   cursor:pointer;
+  font-weight:bold;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+.btn-main{
+  background:linear-gradient(90deg,#22c55e,#16a34a);
+}
+
+.btn-buy{
+  background:linear-gradient(90deg,#f59e0b,#f97316);
+}
+
+.btn-follow{
+  background:linear-gradient(90deg,#38bdf8,#0ea5e9);
 }
 
 .account{
   background:#020617;
-  padding:10px;
-  border-radius:10px;
-  margin:5px 0;
+  padding:12px;
+  border-radius:12px;
+  margin:6px 0;
 }
 </style>
 </head>
@@ -47,53 +84,47 @@ input, textarea, button{
 <body>
 
 <div class="container">
+
 <div class="card">
+<h1>🚀 Followers Boost</h1>
 
-<h1>🚀 Followers Boost Pro</h1>
-
-<!-- تسجيل -->
 <div id="auth">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
-<button onclick="register()">تسجيل</button>
-<button onclick="login()">دخول</button>
+<button class="btn-main" onclick="register()">تسجيل</button>
+<button class="btn-main" onclick="login()">دخول</button>
 </div>
 
-<!-- التطبيق -->
 <div id="app" class="hidden">
 
 <h3>⭐ النقاط: <span id="points">0</span></h3>
 
-<button onclick="buyPoints()">💳 شراء 100 نقطة (1$)</button>
+<button class="btn-buy" onclick="buyPoints()">💳 شراء 100 نقطة</button>
 
-<h3>📩 إرسال إثبات الدفع</h3>
-<textarea id="message" placeholder="اكتب مثلا: دفعت 1$"></textarea>
-<button onclick="sendRequest()">إرسال الطلب</button>
+<textarea id="message" placeholder="أكتب: دفعت 1$"></textarea>
+<button class="btn-main" onclick="sendRequest()">📩 إرسال الطلب</button>
 
 <input id="link" placeholder="رابط حسابك">
-<button onclick="addLink()">إرسال</button>
+<button class="btn-main" onclick="addLink()">➕ إضافة حساب</button>
 
 <h3>👥 الحسابات</h3>
 <div id="list"></div>
 
-<h3>🏆 أفضل المستخدمين</h3>
+<h3>🏆 الأفضل</h3>
 <div id="leaderboard"></div>
 
-<button onclick="logout()">تسجيل الخروج</button>
+<button onclick="logout()">🚪 خروج</button>
 
 </div>
 
-<!-- 🔐 لوحة التحكم -->
 <div id="adminPanel" class="hidden">
-
 <h2>🔐 لوحة التحكم</h2>
 
-<h3>📩 طلبات المستخدمين</h3>
 <div id="requests"></div>
 
 <input id="adminUid" placeholder="User ID">
-<input id="adminPoints" placeholder="عدد النقاط">
-<button onclick="addPoints()">➕ إضافة نقاط</button>
+<input id="adminPoints" placeholder="Points">
+<button class="btn-main" onclick="addPoints()">➕ إضافة نقاط</button>
 
 </div>
 
@@ -117,123 +148,99 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const authDiv = document.getElementById("auth");
-const appDiv = document.getElementById("app");
-const adminPanel = document.getElementById("adminPanel");
-
-const pointsSpan = document.getElementById("points");
-const linkInput = document.getElementById("link");
-const listDiv = document.getElementById("list");
-const leaderboardDiv = document.getElementById("leaderboard");
-const requestsDiv = document.getElementById("requests");
-
-let currentUser = null;
-
-// 🔴 ضع ايميلك
+// 🔴 تم وضع ايميلك هنا
 const ADMIN_EMAIL = "abood.gts.411@gmail.com";
 
-// تسجيل
-function register(){
-  auth.createUserWithEmailAndPassword(emailInput.value,passwordInput.value)
-  .then(u=>{
-    currentUser=u.user;
-    db.collection("users").doc(currentUser.uid).set({points:100});
-  });
-}
+let currentUser=null;
 
-// دخول
-function login(){
-  auth.signInWithEmailAndPassword(emailInput.value,passwordInput.value);
-}
-
-// مراقبة
 auth.onAuthStateChanged(user=>{
   if(user){
     currentUser=user;
 
-    authDiv.style.display="none";
-    appDiv.classList.remove("hidden");
+    document.getElementById("auth").style.display="none";
+    document.getElementById("app").classList.remove("hidden");
 
     db.collection("users").doc(user.uid).get().then(doc=>{
-      pointsSpan.innerText=doc.data().points;
+      document.getElementById("points").innerText=doc.data().points;
     });
 
     loadAccounts();
     loadLeaderboard();
 
-    if(user.email === ADMIN_EMAIL){
-      adminPanel.classList.remove("hidden");
+    if(user.email===ADMIN_EMAIL){
+      document.getElementById("adminPanel").classList.remove("hidden");
       loadRequests();
     }
   }
 });
 
-// شراء
+function register(){
+  auth.createUserWithEmailAndPassword(email.value,password.value)
+  .then(u=>{
+    db.collection("users").doc(u.user.uid).set({points:100});
+  });
+}
+
+function login(){
+  auth.signInWithEmailAndPassword(email.value,password.value);
+}
+
 function buyPoints(){
   window.open("https://paypal.me/Lakrad989/1","_blank");
 }
 
-// 📩 إرسال طلب
 function sendRequest(){
   db.collection("requests").add({
-    uid: currentUser.uid,
-    email: currentUser.email,
-    message: document.getElementById("message").value
+    uid:currentUser.uid,
+    email:currentUser.email,
+    message:message.value
   });
-
-  alert("تم إرسال الطلب");
+  alert("تم الإرسال");
 }
 
-// تحميل الطلبات
 function loadRequests(){
   db.collection("requests").onSnapshot(data=>{
-    requestsDiv.innerHTML="";
-
+    requests.innerHTML="";
     data.forEach(doc=>{
-      let r = doc.data();
-
-      requestsDiv.innerHTML+=`
+      let r=doc.data();
+      requests.innerHTML+=`
       <div class="account">
-        📧 ${r.email} <br>
-        🆔 ${r.uid} <br>
+        📧 ${r.email}<br>
+        🆔 ${r.uid}<br>
         💬 ${r.message}
       </div>`;
     });
   });
 }
 
-// إضافة نقاط
 function addPoints(){
-  let uid = document.getElementById("adminUid").value;
-  let pts = parseInt(document.getElementById("adminPoints").value);
+  let uid=adminUid.value;
+  let pts=parseInt(adminPoints.value);
 
-  let ref = db.collection("users").doc(uid);
+  let ref=db.collection("users").doc(uid);
 
   ref.get().then(doc=>{
-    let newPoints = doc.data().points + pts;
-    ref.update({points:newPoints});
+    let p=doc.data().points+pts;
+    ref.update({points:p});
     alert("تمت الإضافة");
   });
 }
 
-// باقي النظام
 function addLink(){
-  db.collection("accounts").add({url:linkInput.value});
+  db.collection("accounts").add({url:link.value});
   loadAccounts();
 }
 
 function loadAccounts(){
   db.collection("accounts").get().then(data=>{
-    listDiv.innerHTML="";
+    list.innerHTML="";
     data.forEach(doc=>{
       let url=doc.data().url;
 
-      listDiv.innerHTML+=`
+      list.innerHTML+=`
       <div class="account">
         ${url}
-        <button onclick="follow('${url}',this)">تابع</button>
+        <button class="btn-follow" onclick="follow('${url}',this)">تابع</button>
       </div>`;
     });
   });
@@ -241,15 +248,13 @@ function loadAccounts(){
 
 function follow(url,btn){
   btn.disabled=true;
-  btn.innerText="انتظر 10 ثواني...";
-
   window.open(url,"_blank");
 
   let t=10;
 
   let timer=setInterval(()=>{
     t--;
-    btn.innerText="انتظر "+t+" ث";
+    btn.innerText="⏳ "+t;
 
     if(t<=0){
       clearInterval(timer);
@@ -259,10 +264,10 @@ function follow(url,btn){
       ref.get().then(doc=>{
         let p=doc.data().points+10;
         ref.update({points:p});
-        pointsSpan.innerText=p;
+        points.innerText=p;
       });
 
-      btn.innerText="تم ✔";
+      btn.innerText="✔";
     }
   },1000);
 }
@@ -270,11 +275,11 @@ function follow(url,btn){
 function loadLeaderboard(){
   db.collection("users").orderBy("points","desc").limit(5)
   .onSnapshot(data=>{
-    leaderboardDiv.innerHTML="";
+    leaderboard.innerHTML="";
     data.forEach(doc=>{
-      leaderboardDiv.innerHTML+=`
+      leaderboard.innerHTML+=`
       <div class="account">
-        👤 ${doc.id} - ⭐ ${doc.data().points}
+        ⭐ ${doc.data().points}
       </div>`;
     });
   });
@@ -287,4 +292,4 @@ function logout(){
 </script>
 
 </body>
-  </html>
+</html>
