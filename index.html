@@ -22,7 +22,6 @@ body{
   background:#1e293b;
   padding:20px;
   border-radius:20px;
-  box-shadow:0 0 20px rgba(0,0,0,0.4);
 }
 
 h1{
@@ -87,13 +86,13 @@ button{
 
 <button class="btn-buy" onclick="buyPoints()">💳 شراء 100 نقطة</button>
 
-<textarea id="message" placeholder="اكتب: دفعت 1$"></textarea>
+<textarea id="message" placeholder="دفعت 1$"></textarea>
 <button class="btn-main" onclick="sendRequest()">📩 إرسال الطلب</button>
 
-<input id="link" placeholder="رابط حسابك">
-<button class="btn-main" onclick="addLink()">➕ إضافة حساب</button>
+<input id="link" placeholder="رابط المهمة">
+<button class="btn-main" onclick="addTask()">➕ إضافة مهمة</button>
 
-<h3>👥 الحسابات</h3>
+<h3>🎯 المهام</h3>
 <div id="list"></div>
 
 <h3>🏆 الأفضل</h3>
@@ -117,7 +116,6 @@ button{
 </div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -142,18 +140,18 @@ auth.onAuthStateChanged(user=>{
   if(user){
     currentUser=user;
 
-    auth.style.display="none";
-    app.classList.remove("hidden");
+    document.getElementById("auth").style.display="none";
+    document.getElementById("app").classList.remove("hidden");
 
     db.collection("users").doc(user.uid).get().then(doc=>{
-      points.innerText=doc.data().points;
+      document.getElementById("points").innerText=doc.data().points;
     });
 
-    loadAccounts();
+    loadTasks();
     loadLeaderboard();
 
     if(user.email===ADMIN_EMAIL){
-      adminPanel.classList.remove("hidden");
+      document.getElementById("adminPanel").classList.remove("hidden");
       loadRequests();
     }
   }
@@ -211,44 +209,64 @@ function addPoints(){
   });
 }
 
-function addLink(){
-  db.collection("accounts").add({url:link.value});
-  loadAccounts();
+// 🎯 إضافة مهمة
+function addTask(){
+  let url = link.value;
+  let type = "follow";
+
+  if(url.includes("youtube")) type="youtube";
+  else if(url.includes("http")) type="visit";
+
+  db.collection("tasks").add({
+    url:url,
+    type:type
+  });
+
+  loadTasks();
 }
 
-function loadAccounts(){
-  db.collection("accounts").get().then(data=>{
+// تحميل المهام
+function loadTasks(){
+  db.collection("tasks").get().then(data=>{
     list.innerHTML="";
+
     data.forEach(doc=>{
-      let url=doc.data().url;
+      let item = doc.data();
+      let url = item.url;
+      let type = item.type;
+
+      let title="";
+
+      if(type==="follow") title="📲 متابعة";
+      if(type==="youtube") title="▶️ مشاهدة";
+      if(type==="visit") title="🌐 زيارة";
 
       list.innerHTML+=`
       <div class="account">
+        <b>${title}</b><br>
         ${url}
-        <button class="btn-follow" onclick="follow('${url}',this)">تابع</button>
+        <button class="btn-follow" onclick="doTask('${url}',this)">تنفيذ</button>
       </div>`;
     });
   });
 }
 
-// 🔥 حماية من الغش
-function follow(url,btn){
+// 🔥 تنفيذ المهمة + حماية
+function doTask(url,btn){
 
   let userId = currentUser.uid;
-  let accountId = btoa(url);
+  let taskId = btoa(url);
 
-  let ref = db.collection("follows").doc(userId + "_" + accountId);
+  let ref = db.collection("doneTasks").doc(userId+"_"+taskId);
 
   ref.get().then(doc=>{
 
     if(doc.exists){
-      alert("لقد استخدمت هذا الحساب من قبل ❌");
+      alert("تم تنفيذ هذه المهمة مسبقًا ❌");
       return;
     }
 
     btn.disabled=true;
-    btn.innerText="⏳ انتظر";
-
     window.open(url,"_blank");
 
     let t=10;
@@ -262,10 +280,14 @@ function follow(url,btn){
 
         ref.set({done:true});
 
+        let reward = 8;
+        if(url.includes("youtube")) reward=12;
+        if(url.includes("http")) reward=10;
+
         let userRef=db.collection("users").doc(userId);
 
         userRef.get().then(d=>{
-          let p=d.data().points+8;
+          let p=d.data().points+reward;
           userRef.update({points:p});
           points.innerText=p;
         });
@@ -297,4 +319,4 @@ function logout(){
 </script>
 
 </body>
-</html>
+  </html>
