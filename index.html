@@ -26,7 +26,7 @@ body{
 
 .hidden{display:none;}
 
-input, button{
+input, textarea, button{
   width:100%;
   padding:10px;
   margin:5px 0;
@@ -66,6 +66,10 @@ input, button{
 
 <button onclick="buyPoints()">💳 شراء 100 نقطة (1$)</button>
 
+<h3>📩 إرسال إثبات الدفع</h3>
+<textarea id="message" placeholder="اكتب مثلا: دفعت 1$"></textarea>
+<button onclick="sendRequest()">إرسال الطلب</button>
+
 <input id="link" placeholder="رابط حسابك">
 <button onclick="addLink()">إرسال</button>
 
@@ -79,10 +83,13 @@ input, button{
 
 </div>
 
-<!-- 🔐 لوحة التحكم السرية -->
+<!-- 🔐 لوحة التحكم -->
 <div id="adminPanel" class="hidden">
 
 <h2>🔐 لوحة التحكم</h2>
+
+<h3>📩 طلبات المستخدمين</h3>
+<div id="requests"></div>
 
 <input id="adminUid" placeholder="User ID">
 <input id="adminPoints" placeholder="عدد النقاط">
@@ -120,10 +127,11 @@ const pointsSpan = document.getElementById("points");
 const linkInput = document.getElementById("link");
 const listDiv = document.getElementById("list");
 const leaderboardDiv = document.getElementById("leaderboard");
+const requestsDiv = document.getElementById("requests");
 
 let currentUser = null;
 
-// 🔴 ضع ايميلك هنا
+// 🔴 ضع ايميلك
 const ADMIN_EMAIL = "abood.gts.411@gmail.com";
 
 // تسجيل
@@ -155,25 +163,67 @@ auth.onAuthStateChanged(user=>{
     loadAccounts();
     loadLeaderboard();
 
-    // 🔐 فتح لوحة التحكم فقط لك
     if(user.email === ADMIN_EMAIL){
       adminPanel.classList.remove("hidden");
+      loadRequests();
     }
   }
 });
 
-// 💳 شراء
+// شراء
 function buyPoints(){
   window.open("https://paypal.me/Lakrad989/1","_blank");
 }
 
-// إضافة رابط
+// 📩 إرسال طلب
+function sendRequest(){
+  db.collection("requests").add({
+    uid: currentUser.uid,
+    email: currentUser.email,
+    message: document.getElementById("message").value
+  });
+
+  alert("تم إرسال الطلب");
+}
+
+// تحميل الطلبات
+function loadRequests(){
+  db.collection("requests").onSnapshot(data=>{
+    requestsDiv.innerHTML="";
+
+    data.forEach(doc=>{
+      let r = doc.data();
+
+      requestsDiv.innerHTML+=`
+      <div class="account">
+        📧 ${r.email} <br>
+        🆔 ${r.uid} <br>
+        💬 ${r.message}
+      </div>`;
+    });
+  });
+}
+
+// إضافة نقاط
+function addPoints(){
+  let uid = document.getElementById("adminUid").value;
+  let pts = parseInt(document.getElementById("adminPoints").value);
+
+  let ref = db.collection("users").doc(uid);
+
+  ref.get().then(doc=>{
+    let newPoints = doc.data().points + pts;
+    ref.update({points:newPoints});
+    alert("تمت الإضافة");
+  });
+}
+
+// باقي النظام
 function addLink(){
   db.collection("accounts").add({url:linkInput.value});
   loadAccounts();
 }
 
-// عرض الحسابات
 function loadAccounts(){
   db.collection("accounts").get().then(data=>{
     listDiv.innerHTML="";
@@ -189,7 +239,6 @@ function loadAccounts(){
   });
 }
 
-// متابعة
 function follow(url,btn){
   btn.disabled=true;
   btn.innerText="انتظر 10 ثواني...";
@@ -205,8 +254,6 @@ function follow(url,btn){
     if(t<=0){
       clearInterval(timer);
 
-      btn.innerText="تم ✔";
-
       let ref=db.collection("users").doc(currentUser.uid);
 
       ref.get().then(doc=>{
@@ -214,16 +261,16 @@ function follow(url,btn){
         ref.update({points:p});
         pointsSpan.innerText=p;
       });
+
+      btn.innerText="تم ✔";
     }
   },1000);
 }
 
-// 🏆 Leaderboard
 function loadLeaderboard(){
   db.collection("users").orderBy("points","desc").limit(5)
   .onSnapshot(data=>{
     leaderboardDiv.innerHTML="";
-
     data.forEach(doc=>{
       leaderboardDiv.innerHTML+=`
       <div class="account">
@@ -233,21 +280,6 @@ function loadLeaderboard(){
   });
 }
 
-// 🔥 إضافة نقاط (Admin)
-function addPoints(){
-  let uid = document.getElementById("adminUid").value;
-  let pts = parseInt(document.getElementById("adminPoints").value);
-
-  let ref = db.collection("users").doc(uid);
-
-  ref.get().then(doc=>{
-    let newPoints = doc.data().points + pts;
-    ref.update({points:newPoints});
-    alert("تمت الإضافة");
-  });
-}
-
-// خروج
 function logout(){
   auth.signOut();
   location.reload();
@@ -255,4 +287,4 @@ function logout(){
 </script>
 
 </body>
-</html>
+  </html>
