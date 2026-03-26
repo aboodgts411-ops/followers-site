@@ -12,20 +12,6 @@ body{
   color:white;
 }
 
-nav{
-  background:#020617;
-  padding:10px;
-  text-align:center;
-}
-
-nav button{
-  margin:5px;
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-}
-
 .container{
   max-width:420px;
   margin:auto;
@@ -59,16 +45,8 @@ input, button{
 
 <body>
 
-<nav>
-<button onclick="showPage('home')">🏠 الرئيسية</button>
-<button onclick="showPage('about')">ℹ️ من نحن</button>
-<button onclick="showPage('privacy')">🔒 سياسة الخصوصية</button>
-</nav>
-
 <div class="container">
-
-<!-- الرئيسية -->
-<div id="home" class="card">
+<div class="card">
 
 <h1>🚀 Followers Boost</h1>
 
@@ -94,22 +72,6 @@ input, button{
 </div>
 
 </div>
-
-<!-- من نحن -->
-<div id="about" class="card hidden">
-<h2>من نحن</h2>
-<p>
-موقع Followers Boost يساعد المستخدمين على زيادة المتابعين
-من خلال تبادل التفاعل بطريقة بسيطة وآمنة.
-</p>
-</div>
-
-<!-- سياسة الخصوصية -->
-<div id="privacy" class="card hidden">
-<h2>سياسة الخصوصية</h2>
-<p>نحن نحترم خصوصيتك ونستخدم Google AdSense للإعلانات.</p>
-</div>
-
 </div>
 
 <!-- Firebase -->
@@ -129,7 +91,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// تعريف العناصر
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const authDiv = document.getElementById("auth");
@@ -138,42 +99,31 @@ const pointsSpan = document.getElementById("points");
 const linkInput = document.getElementById("link");
 const listDiv = document.getElementById("list");
 
-let currentUser = null;
-
-// التنقل
-function showPage(p){
-  document.querySelectorAll(".card").forEach(el=>el.classList.add("hidden"));
-  document.getElementById(p).classList.remove("hidden");
-}
+let currentUser=null;
 
 // تسجيل
 function register(){
-  auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value)
-  .then(user=>{
-    currentUser = user.user;
+  auth.createUserWithEmailAndPassword(emailInput.value,passwordInput.value)
+  .then(u=>{
+    currentUser=u.user;
     db.collection("users").doc(currentUser.uid).set({points:100});
-    alert("تم التسجيل بنجاح");
-  })
-  .catch(e=>alert(e.message));
+  });
 }
 
 // دخول
 function login(){
-  auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value)
-  .then(()=>alert("تم تسجيل الدخول"))
-  .catch(e=>alert(e.message));
+  auth.signInWithEmailAndPassword(emailInput.value,passwordInput.value);
 }
 
-// مراقبة المستخدم
+// مراقبة
 auth.onAuthStateChanged(user=>{
   if(user){
-    currentUser = user;
-
-    authDiv.style.display = "none";
+    currentUser=user;
+    authDiv.style.display="none";
     appDiv.classList.remove("hidden");
 
     db.collection("users").doc(user.uid).get().then(doc=>{
-      pointsSpan.innerText = doc.data().points;
+      pointsSpan.innerText=doc.data().points;
     });
 
     load();
@@ -182,18 +132,53 @@ auth.onAuthStateChanged(user=>{
 
 // إضافة رابط
 function addLink(){
-  db.collection("accounts").add({url: linkInput.value});
+  db.collection("accounts").add({url:linkInput.value});
   load();
 }
 
-// عرض الحسابات
+// عرض الحسابات + زر تابع محمي
 function load(){
   db.collection("accounts").get().then(data=>{
-    listDiv.innerHTML = "";
+    listDiv.innerHTML="";
     data.forEach(doc=>{
-      listDiv.innerHTML += `<div class="account">${doc.data().url}</div>`;
+      let url = doc.data().url;
+
+      listDiv.innerHTML += `
+      <div class="account">
+        ${url}
+        <button onclick="follow('${url}', this)">تابع</button>
+      </div>`;
     });
   });
+}
+
+// 🔥 حماية (انتظار 10 ثواني)
+function follow(url, btn){
+  btn.disabled = true;
+  btn.innerText = "انتظر 10 ثواني...";
+
+  window.open(url, "_blank");
+
+  let time = 10;
+
+  let timer = setInterval(()=>{
+    time--;
+    btn.innerText = "انتظر " + time + " ث";
+
+    if(time <= 0){
+      clearInterval(timer);
+
+      btn.innerText = "تم ✔";
+
+      let ref = db.collection("users").doc(currentUser.uid);
+
+      ref.get().then(doc=>{
+        let p = doc.data().points + 10;
+        ref.update({points:p});
+        pointsSpan.innerText = p;
+      });
+    }
+  },1000);
 }
 
 // خروج
