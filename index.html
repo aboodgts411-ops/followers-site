@@ -8,7 +8,7 @@
 body{margin:0;font-family:Arial;background:#0f172a;color:white;}
 .container{max-width:420px;margin:auto;padding:20px;}
 .card{background:#1e293b;padding:20px;border-radius:20px;}
-input,textarea,button{width:100%;padding:10px;margin:5px 0;border-radius:10px;border:none;}
+input,button{width:100%;padding:10px;margin:5px 0;border-radius:10px;border:none;}
 button{cursor:pointer;font-weight:bold;}
 .account{background:#020617;padding:10px;border-radius:10px;margin:5px 0;}
 </style>
@@ -32,10 +32,10 @@ button{cursor:pointer;font-weight:bold;}
 
 <p>⭐ نقاطك: <span id="points">0</span></p>
 
-<button onclick="copyUID()">📋 نسخ UID</button>
+<button onclick="buy()">💳 شراء 100 نقطة</button>
 
-<textarea id="message" placeholder="دفعت"></textarea>
-<button onclick="sendRequest()">📩 إرسال الطلب</button>
+<input id="tx" placeholder="Transaction ID">
+<button onclick="verify()">✅ تأكيد الدفع</button>
 
 <input id="link" placeholder="رابط المهمة">
 <button onclick="addTask()">➕ إضافة مهمة</button>
@@ -44,11 +44,6 @@ button{cursor:pointer;font-weight:bold;}
 
 <button onclick="logout()">خروج</button>
 
-</div>
-
-<div id="adminPanel" class="hidden">
-<h3>🔐 Admin</h3>
-<div id="requests"></div>
 </div>
 
 </div>
@@ -70,8 +65,6 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-const ADMIN_EMAIL="abood.gts.411@gmail.com";
-
 let currentUser=null;
 
 auth.onAuthStateChanged(user=>{
@@ -86,11 +79,6 @@ auth.onAuthStateChanged(user=>{
   });
 
   loadTasks();
-
-  if(user.email===ADMIN_EMAIL){
-    adminPanel.classList.remove("hidden");
-    loadRequests();
-  }
  }
 });
 
@@ -105,41 +93,52 @@ function login(){
  auth.signInWithEmailAndPassword(email.value,password.value);
 }
 
-// 📋 نسخ UID
-function copyUID(){
- navigator.clipboard.writeText(currentUser.uid);
- alert("تم نسخ UID");
+// 💳 شراء
+function buy(){
+ window.open("https://paypal.me/Lakrad989/1");
 }
 
-// 📩 إرسال طلب
-function sendRequest(){
- db.collection("requests").add({
-  uid:currentUser.uid,
-  email:currentUser.email,
-  message:message.value
- });
- alert("تم");
-}
+// ✅ تحقق
+function verify(){
 
-// 🔥 منع السبام (5 مهام فقط)
-function addTask(){
- db.collection("tasks").where("owner","==",currentUser.uid).get().then(s=>{
+ let id=tx.value;
 
-  if(s.size>=5){
-    alert("وصلت الحد الأقصى ❌");
+ if(!id){
+  alert("أدخل Transaction ID");
+  return;
+ }
+
+ let ref=db.collection("payments").doc(id);
+
+ ref.get().then(doc=>{
+
+  if(doc.exists){
+    alert("تم استخدام هذا الكود ❌");
     return;
   }
 
-  db.collection("tasks").add({
-    url:link.value,
-    owner:currentUser.uid
+  ref.set({
+    user:currentUser.uid
   });
 
-  loadTasks();
+  let userRef=db.collection("users").doc(currentUser.uid);
+
+  userRef.get().then(d=>{
+    let p=d.data().points+100;
+    userRef.update({points:p});
+    points.innerText=p;
+  });
+
+  alert("تمت العملية بنجاح ✅");
  });
 }
 
-// تحميل المهام
+// مهام
+function addTask(){
+ db.collection("tasks").add({url:link.value});
+ loadTasks();
+}
+
 function loadTasks(){
  db.collection("tasks").get().then(s=>{
   list.innerHTML="";
@@ -155,52 +154,21 @@ function loadTasks(){
  });
 }
 
-// تنفيذ
 function doTask(url,btn){
- let id=currentUser.uid+"_"+btoa(url);
+ btn.disabled=true;
+ window.open(url);
 
- let ref=db.collection("done").doc(id);
+ setTimeout(()=>{
+  let ref=db.collection("users").doc(currentUser.uid);
 
- ref.get().then(doc=>{
-  if(doc.exists){alert("تم ❌");return;}
-
-  btn.disabled=true;
-  window.open(url);
-
-  setTimeout(()=>{
-    ref.set({done:true});
-
-    let userRef=db.collection("users").doc(currentUser.uid);
-
-    userRef.get().then(d=>{
-      let p=d.data().points+10;
-      userRef.update({points:p});
-      points.innerText=p;
-    });
-
-    btn.innerText="✔";
-  },10000);
- });
-}
-
-// 🔐 Admin
-function loadRequests(){
- db.collection("requests").onSnapshot(s=>{
-  requests.innerHTML="";
-  s.forEach(d=>{
-    let r=d.data();
-
-    requests.innerHTML+=`
-    <div class="account">
-    ${r.email}<br>${r.uid}<br>${r.message}
-    <button onclick="deleteReq('${d.id}')">حذف</button>
-    </div>`;
+  ref.get().then(d=>{
+    let p=d.data().points+10;
+    ref.update({points:p});
+    points.innerText=p;
   });
- });
-}
 
-function deleteReq(id){
- db.collection("requests").doc(id).delete();
+  btn.innerText="✔";
+ },10000);
 }
 
 function logout(){
