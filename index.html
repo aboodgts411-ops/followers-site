@@ -5,22 +5,12 @@
 <title>Followers Boost Pro</title>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:linear-gradient(135deg,#0f172a,#1e293b);
-  color:white;
-}
+body{margin:0;font-family:Arial;background:#0f172a;color:white;}
 .container{max-width:420px;margin:auto;padding:20px;}
 .card{background:#1e293b;padding:20px;border-radius:20px;}
-h1{text-align:center;color:#38bdf8;}
-.hidden{display:none;}
-input,textarea{width:100%;padding:12px;margin:6px 0;border-radius:12px;border:none;background:#020617;color:white;}
-button{width:100%;padding:12px;margin:6px 0;border-radius:12px;border:none;font-weight:bold;cursor:pointer;}
-.btn-main{background:#22c55e;}
-.btn-buy{background:#f59e0b;}
-.btn-vip{background:#a855f7;}
-.account{background:#020617;padding:12px;border-radius:12px;margin:6px 0;}
+input,textarea,button{width:100%;padding:10px;margin:5px 0;border-radius:10px;border:none;}
+button{cursor:pointer;font-weight:bold;}
+.account{background:#020617;padding:10px;border-radius:10px;margin:5px 0;}
 </style>
 </head>
 
@@ -29,24 +19,20 @@ button{width:100%;padding:12px;margin:6px 0;border-radius:12px;border:none;font-
 <div class="container">
 <div class="card">
 
-<h1>🚀 Followers Boost</h1>
+<h2>🚀 Followers Boost</h2>
 
 <div id="auth">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
-<button class="btn-main" onclick="register()">تسجيل</button>
-<button class="btn-main" onclick="login()">دخول</button>
+<button onclick="register()">تسجيل</button>
+<button onclick="login()">دخول</button>
 </div>
 
 <div id="app" class="hidden">
 
-<h3>⭐ النقاط: <span id="points">0</span></h3>
-<h3>👑 الحالة: <span id="vipStatus">عادي</span></h3>
+<p>⭐ نقاطك: <span id="points">0</span></p>
 
-<button class="btn-buy" onclick="buyPoints()">💳 شراء نقاط</button>
-<button class="btn-vip" onclick="buyVIP()">🔥 شراء VIP</button>
-
-<button class="btn-main" onclick="dailyReward()">🎁 مكافأة يومية</button>
+<button onclick="copyUID()">📋 نسخ UID</button>
 
 <textarea id="message" placeholder="دفعت"></textarea>
 <button onclick="sendRequest()">📩 إرسال الطلب</button>
@@ -61,12 +47,8 @@ button{width:100%;padding:12px;margin:6px 0;border-radius:12px;border:none;font-
 </div>
 
 <div id="adminPanel" class="hidden">
-<h2>🔐 Admin</h2>
+<h3>🔐 Admin</h3>
 <div id="requests"></div>
-<input id="adminUid" placeholder="UID">
-<input id="adminPoints" placeholder="Points">
-<button onclick="addPoints()">إضافة</button>
-<button onclick="giveVIP()">👑 إعطاء VIP</button>
 </div>
 
 </div>
@@ -82,6 +64,7 @@ const firebaseConfig={
  authDomain:"followers-app-f3419.firebaseapp.com",
  projectId:"followers-app-f3419"
 };
+
 firebase.initializeApp(firebaseConfig);
 
 const auth=firebase.auth();
@@ -95,15 +78,11 @@ auth.onAuthStateChanged(user=>{
  if(user){
   currentUser=user;
 
-  authDiv.style.display="none";
+  auth.style.display="none";
   app.classList.remove("hidden");
 
-  let ref=db.collection("users").doc(user.uid);
-
-  ref.get().then(doc=>{
-    let d=doc.data();
-    points.innerText=d.points;
-    vipStatus.innerText=d.vip?"VIP 👑":"عادي";
+  db.collection("users").doc(user.uid).get().then(doc=>{
+    points.innerText=doc.data().points;
   });
 
   loadTasks();
@@ -118,11 +97,7 @@ auth.onAuthStateChanged(user=>{
 function register(){
  auth.createUserWithEmailAndPassword(email.value,password.value)
  .then(u=>{
-  db.collection("users").doc(u.user.uid).set({
-    points:100,
-    vip:false,
-    lastDaily:0
-  });
+  db.collection("users").doc(u.user.uid).set({points:100});
  });
 }
 
@@ -130,14 +105,13 @@ function login(){
  auth.signInWithEmailAndPassword(email.value,password.value);
 }
 
-function buyPoints(){
- window.open("https://paypal.me/Lakrad989/1");
+// 📋 نسخ UID
+function copyUID(){
+ navigator.clipboard.writeText(currentUser.uid);
+ alert("تم نسخ UID");
 }
 
-function buyVIP(){
- window.open("https://paypal.me/Lakrad989/5");
-}
-
+// 📩 إرسال طلب
 function sendRequest(){
  db.collection("requests").add({
   uid:currentUser.uid,
@@ -147,37 +121,25 @@ function sendRequest(){
  alert("تم");
 }
 
-function loadRequests(){
- db.collection("requests").onSnapshot(s=>{
-  requests.innerHTML="";
-  s.forEach(d=>{
-    let r=d.data();
-    requests.innerHTML+=`<div class="account">${r.email}<br>${r.uid}</div>`;
-  });
- });
-}
-
-function addPoints(){
- let uid=adminUid.value;
- let pts=parseInt(adminPoints.value);
-
- let ref=db.collection("users").doc(uid);
-
- ref.get().then(d=>{
-  ref.update({points:d.data().points+pts});
- });
-}
-
-function giveVIP(){
- let uid=adminUid.value;
- db.collection("users").doc(uid).update({vip:true});
-}
-
+// 🔥 منع السبام (5 مهام فقط)
 function addTask(){
- db.collection("tasks").add({url:link.value});
- loadTasks();
+ db.collection("tasks").where("owner","==",currentUser.uid).get().then(s=>{
+
+  if(s.size>=5){
+    alert("وصلت الحد الأقصى ❌");
+    return;
+  }
+
+  db.collection("tasks").add({
+    url:link.value,
+    owner:currentUser.uid
+  });
+
+  loadTasks();
+ });
 }
 
+// تحميل المهام
 function loadTasks(){
  db.collection("tasks").get().then(s=>{
   list.innerHTML="";
@@ -193,13 +155,14 @@ function loadTasks(){
  });
 }
 
+// تنفيذ
 function doTask(url,btn){
  let id=currentUser.uid+"_"+btoa(url);
 
  let ref=db.collection("done").doc(id);
 
  ref.get().then(doc=>{
-  if(doc.exists){alert("منفذ ❌");return;}
+  if(doc.exists){alert("تم ❌");return;}
 
   btn.disabled=true;
   window.open(url);
@@ -210,11 +173,9 @@ function doTask(url,btn){
     let userRef=db.collection("users").doc(currentUser.uid);
 
     userRef.get().then(d=>{
-      let reward=10;
-      if(d.data().vip) reward=20;
-
-      userRef.update({points:d.data().points+reward});
-      points.innerText=d.data().points+reward;
+      let p=d.data().points+10;
+      userRef.update({points:p});
+      points.innerText=p;
     });
 
     btn.innerText="✔";
@@ -222,28 +183,24 @@ function doTask(url,btn){
  });
 }
 
-// 🎁 مكافأة يومية
-function dailyReward(){
- let ref=db.collection("users").doc(currentUser.uid);
+// 🔐 Admin
+function loadRequests(){
+ db.collection("requests").onSnapshot(s=>{
+  requests.innerHTML="";
+  s.forEach(d=>{
+    let r=d.data();
 
- ref.get().then(d=>{
-  let now=Date.now();
-
-  if(now - d.data().lastDaily < 86400000){
-    alert("ارجع غدا ❌");
-    return;
-  }
-
-  let reward=50;
-  if(d.data().vip) reward=100;
-
-  ref.update({
-    points:d.data().points+reward,
-    lastDaily:now
+    requests.innerHTML+=`
+    <div class="account">
+    ${r.email}<br>${r.uid}<br>${r.message}
+    <button onclick="deleteReq('${d.id}')">حذف</button>
+    </div>`;
   });
-
-  points.innerText=d.data().points+reward;
  });
+}
+
+function deleteReq(id){
+ db.collection("requests").doc(id).delete();
 }
 
 function logout(){
@@ -253,4 +210,4 @@ function logout(){
 </script>
 
 </body>
-  </html>
+</html>
